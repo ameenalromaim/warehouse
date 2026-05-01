@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>الموردين</title>
+    <title>بيانات الفروع</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
@@ -135,20 +135,20 @@
             min-width: 88px;
         }
 
-        .delete-supplier-modal .modal-content {
+        .delete-branch-modal .modal-content {
             border: none;
             border-radius: 1.25rem;
             overflow: hidden;
             box-shadow: 0 25px 50px -12px rgba(220, 38, 38, 0.35), 0 0 0 1px rgba(15, 23, 42, 0.06);
         }
 
-        .delete-supplier-modal .delete-modal-head {
+        .delete-branch-modal .delete-modal-head {
             background: linear-gradient(145deg, #f87171 0%, #dc2626 42%, #991b1b 100%);
             position: relative;
             padding: 1.75rem 1.25rem 1.5rem;
         }
 
-        .delete-supplier-modal .delete-modal-head::after {
+        .delete-branch-modal .delete-modal-head::after {
             content: '';
             position: absolute;
             inset: 0;
@@ -156,7 +156,7 @@
             pointer-events: none;
         }
 
-        .delete-supplier-modal .delete-modal-icon {
+        .delete-branch-modal .delete-modal-icon {
             width: 4.25rem;
             height: 4.25rem;
             margin: 0 auto 1rem;
@@ -173,7 +173,7 @@
             z-index: 1;
         }
 
-        .delete-supplier-modal .delete-modal-title {
+        .delete-branch-modal .delete-modal-title {
             color: #fff;
             font-weight: 700;
             font-size: 1.15rem;
@@ -182,7 +182,7 @@
             z-index: 1;
         }
 
-        .delete-supplier-modal .delete-modal-sub {
+        .delete-branch-modal .delete-modal-sub {
             color: rgba(255, 255, 255, 0.88);
             font-size: 0.875rem;
             margin: 0.35rem 0 0;
@@ -190,12 +190,12 @@
             z-index: 1;
         }
 
-        .delete-supplier-modal .delete-modal-body {
+        .delete-branch-modal .delete-modal-body {
             padding: 1.5rem 1.25rem 1.25rem;
             background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
         }
 
-        .delete-supplier-modal .delete-modal-name {
+        .delete-branch-modal .delete-modal-name {
             display: inline-block;
             margin-top: 0.65rem;
             padding: 0.35rem 1rem;
@@ -208,20 +208,20 @@
             word-break: break-word;
         }
 
-        .delete-supplier-modal .modal-footer {
+        .delete-branch-modal .modal-footer {
             border-top: 1px solid #e2e8f0;
             background: #f8fafc;
             padding: 1rem 1.25rem;
         }
 
-        .delete-supplier-modal .btn-delete-confirm {
+        .delete-branch-modal .btn-delete-confirm {
             background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
             border: none;
             font-weight: 600;
             box-shadow: 0 4px 14px rgba(220, 38, 38, 0.45);
         }
 
-        .delete-supplier-modal .btn-delete-confirm:hover {
+        .delete-branch-modal .btn-delete-confirm:hover {
             filter: brightness(1.06);
             color: #fff;
         }
@@ -236,13 +236,13 @@
             <header class="topbar p-3">
                 <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
                     <h1 class="h4 topbar-title d-flex align-items-center gap-2">
-                        <i class="bi bi-truck text-info"></i>
-                        الموردين
+                        <i class="bi bi-people text-info"></i>
+                        عرض بيانات الفروع
                     </h1>
-                    <button type="button" class="btn btn-p-accent btn-sm px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#importSuppliersModal">
-                        <i class="bi bi-upload ms-1"></i>
-                        استيراد ملف Excel
-                    </button>
+                    <a href="{{ route('dashboard.branches.create') }}" class="btn btn-p-accent btn-sm px-3 shadow-sm">
+                        <i class="bi bi-plus-circle ms-1"></i>
+                        إضافة فرع جديد
+                    </a>
                 </div>
             </header>
 
@@ -261,15 +261,15 @@
                     <div class="card-body border-bottom bg-white py-3">
                         <span class="text-muted small">
                             <i class="bi bi-table ms-1"></i>
-                            إجمالي الموردين في هذه الصفحة: {{ $suppliers->count() }}
+                            إجمالي الفروع في هذه الصفحة: {{ $branches->count() }}
                         </span>
                     </div>
 
-                    @if($suppliers->count() === 0)
+                    @if($branches->count() === 0)
                         <div class="card-body py-5">
                             <div class="empty-state text-center py-5 px-3">
                                 <i class="bi bi-inbox display-4 text-muted d-block mb-3"></i>
-                                <p class="mb-0 text-muted fw-semibold">لا توجد بيانات موردين حالياً</p>
+                                <p class="mb-0 text-muted fw-semibold">لا توجد بيانات فروع حالياً</p>
                             </div>
                         </div>
                     @else
@@ -277,30 +277,25 @@
                             <table class="table table-hover align-middle mb-0">
                                 <thead>
                                     <tr>
-                                        <th class="ps-4">الاسم</th>
-                                        <th>الهاتف</th>
-                                        <th>العنوان</th>
+                                        <th class="ps-4">#</th>
+                                        <th>اسم الفرع / الموقع</th>
                                         <th class="pe-4 text-center">الاجراءات</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach($suppliers as $supplier)
+                                    @foreach($branches as $branch)
                                         <tr>
-                                            <td class="ps-4 fw-semibold text-dark">{{ $supplier->name ?? '—' }}</td>
-                                            <td>{{ $supplier->phone ?? '—' }}</td>
-                                            <td>{{ $supplier->address ?? '—' }}</td>
+                                            <td class="ps-4 text-muted">{{ $branch->id }}</td>
+                                            <td class="fw-semibold text-dark">{{ $branch->type_location ?? '—' }}</td>
                                             <td class="pe-4">
                                                 <div class="d-flex justify-content-center gap-2 actions-cell">
                                                     <button
                                                         type="button"
                                                         class="btn btn-sm btn-outline-primary"
                                                         data-bs-toggle="modal"
-                                                        data-bs-target="#editSupplierModal"
-                                                        data-id="{{ $supplier->uuid }}"
-                                                        data-name="{{ $supplier->name }}"
-                                                        data-phone="{{ $supplier->phone }}"
-                                                        data-address="{{ $supplier->address }}"
-                                                        data-note="{{ $supplier->note }}"
+                                                        data-bs-target="#editBranchModal"
+                                                        data-id="{{ $branch->id }}"
+                                                        data-branch-name="{{ $branch->type_location }}"
                                                     >
                                                         <i class="bi bi-pencil-square ms-1"></i>
                                                         تعديل
@@ -309,9 +304,9 @@
                                                         type="button"
                                                         class="btn btn-sm btn-outline-danger"
                                                         data-bs-toggle="modal"
-                                                        data-bs-target="#deleteSupplierModal"
-                                                        data-delete-url="{{ route('dashboard.suppliers.destroy', $supplier) }}"
-                                                        data-supplier-name="{{ $supplier->name ?? '—' }}"
+                                                        data-bs-target="#deleteBranchModal"
+                                                        data-delete-url="{{ route('dashboard.branches.destroy', $branch) }}"
+                                                        data-branch-name="{{ $branch->type_location ?? '—' }}"
                                                     >
                                                         <i class="bi bi-trash3 ms-1"></i>
                                                         حذف
@@ -325,7 +320,7 @@
                         </div>
 
                         <div class="card-footer bg-white border-0 py-3 d-flex justify-content-center">
-                            {{ $suppliers->links() }}
+                            {{ $branches->links() }}
                         </div>
                     @endif
                 </div>
@@ -333,45 +328,22 @@
         </div>
     </div>
 
-    <div class="modal fade" id="importSuppliersModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form method="POST" action="{{ route('dashboard.suppliers.import') }}" enctype="multipart/form-data">
-                    @csrf
-                    <div class="modal-header">
-                        <h5 class="modal-title">استيراد الموردين من Excel</h5>
-                        <button type="button" class="btn-close ms-0 me-auto" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <label for="suppliers-file" class="form-label">اختر الملف</label>
-                        <input id="suppliers-file" type="file" name="file" class="form-control" accept=".xlsx,.csv" required>
-                        <small class="text-muted d-block mt-2">الأعمدة المتوقعة: name, phone, address, note</small>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">الغاء</button>
-                        <button type="submit" class="btn btn-primary">استيراد</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade delete-supplier-modal" id="deleteSupplierModal" tabindex="-1" aria-labelledby="deleteSupplierModalLabel" aria-hidden="true">
+    <div class="modal fade delete-branch-modal" id="deleteBranchModal" tabindex="-1" aria-labelledby="deleteBranchModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <form id="deleteSupplierForm" method="POST" action="">
+                <form id="deleteBranchForm" method="POST" action="">
                     @csrf
                     @method('DELETE')
                     <div class="delete-modal-head text-center">
                         <div class="delete-modal-icon" aria-hidden="true">
                             <i class="bi bi-trash3"></i>
                         </div>
-                        <h2 class="delete-modal-title" id="deleteSupplierModalLabel">حذف المورد</h2>
+                        <h2 class="delete-modal-title" id="deleteBranchModalLabel">حذف الفرع</h2>
                         <p class="delete-modal-sub">سيتم إزالة السجل نهائياً من النظام</p>
                     </div>
                     <div class="delete-modal-body text-center">
-                        <p class="text-secondary mb-0 small">هل تريد المتابعة وحذف المورد التالي؟</p>
-                        <p class="delete-modal-name mb-0" id="deleteSupplierNameDisplay">—</p>
+                        <p class="text-secondary mb-0 small">هل تريد المتابعة وحذف الفرع التالي؟</p>
+                        <p class="delete-modal-name mb-0" id="deleteBranchNameDisplay">—</p>
                     </div>
                     <div class="modal-footer flex-nowrap gap-2 justify-content-between">
                         <button type="button" class="btn btn-light border px-3 flex-grow-1" data-bs-dismiss="modal">
@@ -388,32 +360,20 @@
         </div>
     </div>
 
-    <div class="modal fade" id="editSupplierModal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="editBranchModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form id="editSupplierForm" method="POST" action="">
+                <form id="editBranchForm" method="POST" action="">
                     @csrf
                     @method('PUT')
                     <div class="modal-header">
-                        <h5 class="modal-title">تعديل بيانات المورد</h5>
+                        <h5 class="modal-title">تعديل بيانات الفرع</h5>
                         <button type="button" class="btn-close ms-0 me-auto" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="supplier-name" class="form-label">الاسم</label>
-                            <input id="supplier-name" type="text" name="name" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="supplier-phone" class="form-label">الهاتف</label>
-                            <input id="supplier-phone" type="text" name="phone" class="form-control">
-                        </div>
-                        <div class="mb-3">
-                            <label for="supplier-address" class="form-label">العنوان</label>
-                            <input id="supplier-address" type="text" name="address" class="form-control">
-                        </div>
-                        <div>
-                            <label for="supplier-note" class="form-label">الملاحظات</label>
-                            <textarea id="supplier-note" name="note" rows="3" class="form-control"></textarea>
+                        <div class="mb-0">
+                            <label for="branch-name" class="form-label">اسم الفرع</label>
+                            <input id="branch-name" type="text" name="branch_name" class="form-control" required>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -427,47 +387,41 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const editSupplierModal = document.getElementById('editSupplierModal');
-        if (editSupplierModal) {
-            editSupplierModal.addEventListener('show.bs.modal', function (event) {
+        const editBranchModal = document.getElementById('editBranchModal');
+        if (editBranchModal) {
+            editBranchModal.addEventListener('show.bs.modal', function (event) {
                 const button = event.relatedTarget;
                 if (!button) {
                     return;
                 }
 
-                const supplierId = button.getAttribute('data-id');
-                const supplierName = button.getAttribute('data-name') ?? '';
-                const supplierPhone = button.getAttribute('data-phone') ?? '';
-                const supplierAddress = button.getAttribute('data-address') ?? '';
-                const supplierNote = button.getAttribute('data-note') ?? '';
+                const branchId = button.getAttribute('data-id');
+                const branchName = button.getAttribute('data-branch-name') ?? '';
 
-                const form = document.getElementById('editSupplierForm');
-                form.action = `/dashboard/suppliers/${supplierId}`;
+                const form = document.getElementById('editBranchForm');
+                form.action = `/dashboard/branches/${branchId}`;
 
-                document.getElementById('supplier-name').value = supplierName;
-                document.getElementById('supplier-phone').value = supplierPhone;
-                document.getElementById('supplier-address').value = supplierAddress;
-                document.getElementById('supplier-note').value = supplierNote;
+                document.getElementById('branch-name').value = branchName;
             });
         }
 
-        const deleteSupplierModal = document.getElementById('deleteSupplierModal');
-        if (deleteSupplierModal) {
-            deleteSupplierModal.addEventListener('show.bs.modal', function (event) {
+        const deleteBranchModal = document.getElementById('deleteBranchModal');
+        if (deleteBranchModal) {
+            deleteBranchModal.addEventListener('show.bs.modal', function (event) {
                 const button = event.relatedTarget;
                 if (!button) {
                     return;
                 }
 
                 const url = button.getAttribute('data-delete-url');
-                const name = button.getAttribute('data-supplier-name') ?? '—';
+                const name = button.getAttribute('data-branch-name') ?? '—';
 
-                const form = document.getElementById('deleteSupplierForm');
+                const form = document.getElementById('deleteBranchForm');
                 if (url) {
                     form.action = url;
                 }
 
-                const nameEl = document.getElementById('deleteSupplierNameDisplay');
+                const nameEl = document.getElementById('deleteBranchNameDisplay');
                 if (nameEl) {
                     nameEl.textContent = name;
                 }

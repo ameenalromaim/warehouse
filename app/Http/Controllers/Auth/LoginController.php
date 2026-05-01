@@ -8,6 +8,22 @@ use Illuminate\Support\Facades\Auth;
 
 class LoginController extends Controller
 {
+    /** توحيد رقم الهاتف للبحث (مثال: 0771738225 أو 967771738225 → 771738225) */
+    protected function normalizePhone(string $input): string
+    {
+        $digits = preg_replace('/\D+/', '', $input) ?? '';
+
+        if (strlen($digits) === 10 && str_starts_with($digits, '0')) {
+            return substr($digits, 1);
+        }
+
+        if (strlen($digits) === 12 && str_starts_with($digits, '967')) {
+            return substr($digits, 3);
+        }
+
+        return $digits;
+    }
+
     // عرض صفحة الدخول
     public function showLoginForm()
     {
@@ -21,20 +37,22 @@ class LoginController extends Controller
     // تنفيذ تسجيل الدخول
     public function login(Request $request)
     {
-        $credentials = $request->validate([
-            'email' => 'required|email',
+        $request->validate([
+            'phone' => 'required|string|max:32',
             'password' => 'required',
         ]);
 
-        if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
+        $phone = $this->normalizePhone($request->input('phone', ''));
 
-            return redirect()->route('dashboard.purchases');
+        if ($phone === '' || ! Auth::attempt(['phone' => $phone, 'password' => $request->password])) {
+            return back()->withErrors([
+                'phone' => 'بيانات الدخول غير صحيحة',
+            ])->onlyInput('phone');
         }
 
-        return back()->withErrors([
-            'email' => 'بيانات الدخول غير صحيحة',
-        ])->onlyInput('email');
+        $request->session()->regenerate();
+
+        return redirect()->route('dashboard.purchases');
     }
 
     // تسجيل الخروج

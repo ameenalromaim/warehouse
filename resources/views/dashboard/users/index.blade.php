@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>الموردين</title>
+    <title>بيانات المستخدمين</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
@@ -135,20 +135,20 @@
             min-width: 88px;
         }
 
-        .delete-supplier-modal .modal-content {
+        .delete-user-modal .modal-content {
             border: none;
             border-radius: 1.25rem;
             overflow: hidden;
             box-shadow: 0 25px 50px -12px rgba(220, 38, 38, 0.35), 0 0 0 1px rgba(15, 23, 42, 0.06);
         }
 
-        .delete-supplier-modal .delete-modal-head {
+        .delete-user-modal .delete-modal-head {
             background: linear-gradient(145deg, #f87171 0%, #dc2626 42%, #991b1b 100%);
             position: relative;
             padding: 1.75rem 1.25rem 1.5rem;
         }
 
-        .delete-supplier-modal .delete-modal-head::after {
+        .delete-user-modal .delete-modal-head::after {
             content: '';
             position: absolute;
             inset: 0;
@@ -156,7 +156,7 @@
             pointer-events: none;
         }
 
-        .delete-supplier-modal .delete-modal-icon {
+        .delete-user-modal .delete-modal-icon {
             width: 4.25rem;
             height: 4.25rem;
             margin: 0 auto 1rem;
@@ -173,7 +173,7 @@
             z-index: 1;
         }
 
-        .delete-supplier-modal .delete-modal-title {
+        .delete-user-modal .delete-modal-title {
             color: #fff;
             font-weight: 700;
             font-size: 1.15rem;
@@ -182,7 +182,7 @@
             z-index: 1;
         }
 
-        .delete-supplier-modal .delete-modal-sub {
+        .delete-user-modal .delete-modal-sub {
             color: rgba(255, 255, 255, 0.88);
             font-size: 0.875rem;
             margin: 0.35rem 0 0;
@@ -190,12 +190,12 @@
             z-index: 1;
         }
 
-        .delete-supplier-modal .delete-modal-body {
+        .delete-user-modal .delete-modal-body {
             padding: 1.5rem 1.25rem 1.25rem;
             background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
         }
 
-        .delete-supplier-modal .delete-modal-name {
+        .delete-user-modal .delete-modal-name {
             display: inline-block;
             margin-top: 0.65rem;
             padding: 0.35rem 1rem;
@@ -208,20 +208,20 @@
             word-break: break-word;
         }
 
-        .delete-supplier-modal .modal-footer {
+        .delete-user-modal .modal-footer {
             border-top: 1px solid #e2e8f0;
             background: #f8fafc;
             padding: 1rem 1.25rem;
         }
 
-        .delete-supplier-modal .btn-delete-confirm {
+        .delete-user-modal .btn-delete-confirm {
             background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
             border: none;
             font-weight: 600;
             box-shadow: 0 4px 14px rgba(220, 38, 38, 0.45);
         }
 
-        .delete-supplier-modal .btn-delete-confirm:hover {
+        .delete-user-modal .btn-delete-confirm:hover {
             filter: brightness(1.06);
             color: #fff;
         }
@@ -236,13 +236,13 @@
             <header class="topbar p-3">
                 <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
                     <h1 class="h4 topbar-title d-flex align-items-center gap-2">
-                        <i class="bi bi-truck text-info"></i>
-                        الموردين
+                        <i class="bi bi-person-badge text-info"></i>
+                        عرض بيانات المستخدمين
                     </h1>
-                    <button type="button" class="btn btn-p-accent btn-sm px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#importSuppliersModal">
-                        <i class="bi bi-upload ms-1"></i>
-                        استيراد ملف Excel
-                    </button>
+                    <a href="{{ route('dashboard.users.create') }}" class="btn btn-p-accent btn-sm px-3 shadow-sm">
+                        <i class="bi bi-plus-circle ms-1"></i>
+                        إضافة مستخدم جديد
+                    </a>
                 </div>
             </header>
 
@@ -261,15 +261,15 @@
                     <div class="card-body border-bottom bg-white py-3">
                         <span class="text-muted small">
                             <i class="bi bi-table ms-1"></i>
-                            إجمالي الموردين في هذه الصفحة: {{ $suppliers->count() }}
+                            إجمالي المستخدمين في هذه الصفحة: {{ $users->count() }}
                         </span>
                     </div>
 
-                    @if($suppliers->count() === 0)
+                    @if($users->count() === 0)
                         <div class="card-body py-5">
                             <div class="empty-state text-center py-5 px-3">
                                 <i class="bi bi-inbox display-4 text-muted d-block mb-3"></i>
-                                <p class="mb-0 text-muted fw-semibold">لا توجد بيانات موردين حالياً</p>
+                                <p class="mb-0 text-muted fw-semibold">لا توجد بيانات مستخدمين حالياً</p>
                             </div>
                         </div>
                     @else
@@ -278,29 +278,31 @@
                                 <thead>
                                     <tr>
                                         <th class="ps-4">الاسم</th>
+                                        <th>البريد</th>
                                         <th>الهاتف</th>
-                                        <th>العنوان</th>
+                                        <th>الموقع / الفرع</th>
                                         <th class="pe-4 text-center">الاجراءات</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach($suppliers as $supplier)
+                                    @foreach($users as $item)
                                         <tr>
-                                            <td class="ps-4 fw-semibold text-dark">{{ $supplier->name ?? '—' }}</td>
-                                            <td>{{ $supplier->phone ?? '—' }}</td>
-                                            <td>{{ $supplier->address ?? '—' }}</td>
+                                            <td class="ps-4 fw-semibold text-dark">{{ $item->name ?? '—' }}</td>
+                                            <td>{{ $item->email ?? '—' }}</td>
+                                            <td>{{ $item->phone ?? '—' }}</td>
+                                            <td>{{ $item->type_location ? $item->type_location : '—' }}</td>
                                             <td class="pe-4">
                                                 <div class="d-flex justify-content-center gap-2 actions-cell">
                                                     <button
                                                         type="button"
                                                         class="btn btn-sm btn-outline-primary"
                                                         data-bs-toggle="modal"
-                                                        data-bs-target="#editSupplierModal"
-                                                        data-id="{{ $supplier->uuid }}"
-                                                        data-name="{{ $supplier->name }}"
-                                                        data-phone="{{ $supplier->phone }}"
-                                                        data-address="{{ $supplier->address }}"
-                                                        data-note="{{ $supplier->note }}"
+                                                        data-bs-target="#editUserModal"
+                                                        data-id="{{ $item->id }}"
+                                                        data-name="{{ $item->name }}"
+                                                        data-email="{{ $item->email }}"
+                                                        data-phone="{{ $item->phone ?? '' }}"
+                                                        data-type-location="{{ $item->type_location ?? '' }}"
                                                     >
                                                         <i class="bi bi-pencil-square ms-1"></i>
                                                         تعديل
@@ -309,9 +311,9 @@
                                                         type="button"
                                                         class="btn btn-sm btn-outline-danger"
                                                         data-bs-toggle="modal"
-                                                        data-bs-target="#deleteSupplierModal"
-                                                        data-delete-url="{{ route('dashboard.suppliers.destroy', $supplier) }}"
-                                                        data-supplier-name="{{ $supplier->name ?? '—' }}"
+                                                        data-bs-target="#deleteUserModal"
+                                                        data-delete-url="{{ route('dashboard.users.destroy', $item) }}"
+                                                        data-user-name="{{ $item->name ?? '—' }}"
                                                     >
                                                         <i class="bi bi-trash3 ms-1"></i>
                                                         حذف
@@ -325,7 +327,7 @@
                         </div>
 
                         <div class="card-footer bg-white border-0 py-3 d-flex justify-content-center">
-                            {{ $suppliers->links() }}
+                            {{ $users->links() }}
                         </div>
                     @endif
                 </div>
@@ -333,45 +335,22 @@
         </div>
     </div>
 
-    <div class="modal fade" id="importSuppliersModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form method="POST" action="{{ route('dashboard.suppliers.import') }}" enctype="multipart/form-data">
-                    @csrf
-                    <div class="modal-header">
-                        <h5 class="modal-title">استيراد الموردين من Excel</h5>
-                        <button type="button" class="btn-close ms-0 me-auto" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <label for="suppliers-file" class="form-label">اختر الملف</label>
-                        <input id="suppliers-file" type="file" name="file" class="form-control" accept=".xlsx,.csv" required>
-                        <small class="text-muted d-block mt-2">الأعمدة المتوقعة: name, phone, address, note</small>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">الغاء</button>
-                        <button type="submit" class="btn btn-primary">استيراد</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade delete-supplier-modal" id="deleteSupplierModal" tabindex="-1" aria-labelledby="deleteSupplierModalLabel" aria-hidden="true">
+    <div class="modal fade delete-user-modal" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <form id="deleteSupplierForm" method="POST" action="">
+                <form id="deleteUserForm" method="POST" action="">
                     @csrf
                     @method('DELETE')
                     <div class="delete-modal-head text-center">
                         <div class="delete-modal-icon" aria-hidden="true">
                             <i class="bi bi-trash3"></i>
                         </div>
-                        <h2 class="delete-modal-title" id="deleteSupplierModalLabel">حذف المورد</h2>
+                        <h2 class="delete-modal-title" id="deleteUserModalLabel">حذف المستخدم</h2>
                         <p class="delete-modal-sub">سيتم إزالة السجل نهائياً من النظام</p>
                     </div>
                     <div class="delete-modal-body text-center">
-                        <p class="text-secondary mb-0 small">هل تريد المتابعة وحذف المورد التالي؟</p>
-                        <p class="delete-modal-name mb-0" id="deleteSupplierNameDisplay">—</p>
+                        <p class="text-secondary mb-0 small">هل تريد المتابعة وحذف المستخدم التالي؟</p>
+                        <p class="delete-modal-name mb-0" id="deleteUserNameDisplay">—</p>
                     </div>
                     <div class="modal-footer flex-nowrap gap-2 justify-content-between">
                         <button type="button" class="btn btn-light border px-3 flex-grow-1" data-bs-dismiss="modal">
@@ -388,32 +367,49 @@
         </div>
     </div>
 
-    <div class="modal fade" id="editSupplierModal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form id="editSupplierForm" method="POST" action="">
+                <form id="editUserForm" method="POST" action="">
                     @csrf
                     @method('PUT')
                     <div class="modal-header">
-                        <h5 class="modal-title">تعديل بيانات المورد</h5>
+                        <h5 class="modal-title">تعديل بيانات المستخدم</h5>
                         <button type="button" class="btn-close ms-0 me-auto" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label for="supplier-name" class="form-label">الاسم</label>
-                            <input id="supplier-name" type="text" name="name" class="form-control" required>
+                            <label for="user-name" class="form-label">الاسم</label>
+                            <input id="user-name" type="text" name="name" class="form-control" required>
                         </div>
                         <div class="mb-3">
-                            <label for="supplier-phone" class="form-label">الهاتف</label>
-                            <input id="supplier-phone" type="text" name="phone" class="form-control">
+                            <label for="user-email" class="form-label">البريد</label>
+                            <input id="user-email" type="email" name="email" class="form-control" required>
                         </div>
                         <div class="mb-3">
-                            <label for="supplier-address" class="form-label">العنوان</label>
-                            <input id="supplier-address" type="text" name="address" class="form-control">
+                            <label for="user-phone" class="form-label">الهاتف</label>
+                            <input id="user-phone" type="text" name="phone" class="form-control @error('phone') is-invalid @enderror" required maxlength="32">
+                            @error('phone')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="user-type-location" class="form-label">الموقع / الفرع</label>
+                            <select id="user-type-location" name="type_location" class="form-select" required>
+                                <option value="">اختر الموقع</option>
+                                @foreach($locationOptions as $loc)
+                                    <option value="{{ $loc }}">{{ $loc }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="user-password" class="form-label">كلمة المرور الجديدة</label>
+                            <input id="user-password" type="password" name="password" class="form-control" placeholder="اتركها فارغة إن لم تتغير" autocomplete="new-password">
+                            <small class="text-muted">إن أدخلت كلمة مرور يجب تأكيدها في الحقل التالي.</small>
                         </div>
                         <div>
-                            <label for="supplier-note" class="form-label">الملاحظات</label>
-                            <textarea id="supplier-note" name="note" rows="3" class="form-control"></textarea>
+                            <label for="user-password-confirmation" class="form-label">تأكيد كلمة المرور</label>
+                            <input id="user-password-confirmation" type="password" name="password_confirmation" class="form-control" autocomplete="new-password">
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -427,47 +423,49 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const editSupplierModal = document.getElementById('editSupplierModal');
-        if (editSupplierModal) {
-            editSupplierModal.addEventListener('show.bs.modal', function (event) {
+        const editUserModal = document.getElementById('editUserModal');
+        if (editUserModal) {
+            editUserModal.addEventListener('show.bs.modal', function (event) {
                 const button = event.relatedTarget;
                 if (!button) {
                     return;
                 }
 
-                const supplierId = button.getAttribute('data-id');
-                const supplierName = button.getAttribute('data-name') ?? '';
-                const supplierPhone = button.getAttribute('data-phone') ?? '';
-                const supplierAddress = button.getAttribute('data-address') ?? '';
-                const supplierNote = button.getAttribute('data-note') ?? '';
+                const userId = button.getAttribute('data-id');
+                const form = document.getElementById('editUserForm');
+                form.action = `/dashboard/users/${userId}`;
 
-                const form = document.getElementById('editSupplierForm');
-                form.action = `/dashboard/suppliers/${supplierId}`;
+                document.getElementById('user-name').value = button.getAttribute('data-name') ?? '';
+                document.getElementById('user-email').value = button.getAttribute('data-email') ?? '';
+                document.getElementById('user-phone').value = button.getAttribute('data-phone') ?? '';
 
-                document.getElementById('supplier-name').value = supplierName;
-                document.getElementById('supplier-phone').value = supplierPhone;
-                document.getElementById('supplier-address').value = supplierAddress;
-                document.getElementById('supplier-note').value = supplierNote;
+                const locSelect = document.getElementById('user-type-location');
+                const loc = button.getAttribute('data-type-location') ?? '';
+                const hasOption = loc !== '' && Array.from(locSelect.options).some((o) => o.value === loc);
+                locSelect.value = hasOption ? loc : '';
+
+                document.getElementById('user-password').value = '';
+                document.getElementById('user-password-confirmation').value = '';
             });
         }
 
-        const deleteSupplierModal = document.getElementById('deleteSupplierModal');
-        if (deleteSupplierModal) {
-            deleteSupplierModal.addEventListener('show.bs.modal', function (event) {
+        const deleteUserModal = document.getElementById('deleteUserModal');
+        if (deleteUserModal) {
+            deleteUserModal.addEventListener('show.bs.modal', function (event) {
                 const button = event.relatedTarget;
                 if (!button) {
                     return;
                 }
 
                 const url = button.getAttribute('data-delete-url');
-                const name = button.getAttribute('data-supplier-name') ?? '—';
+                const name = button.getAttribute('data-user-name') ?? '—';
 
-                const form = document.getElementById('deleteSupplierForm');
+                const form = document.getElementById('deleteUserForm');
                 if (url) {
                     form.action = url;
                 }
 
-                const nameEl = document.getElementById('deleteSupplierNameDisplay');
+                const nameEl = document.getElementById('deleteUserNameDisplay');
                 if (nameEl) {
                     nameEl.textContent = name;
                 }

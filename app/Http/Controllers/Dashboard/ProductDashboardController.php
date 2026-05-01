@@ -23,9 +23,9 @@ class ProductDashboardController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'code' => ['nullable', 'string', 'max:255', Rule::unique('product', 'code')->ignore($product->id)],
+            'code' => ['nullable', 'string', 'max:255', Rule::unique('product', 'code')->ignore($product->uuid, 'uuid')],
             'description' => ['nullable', 'string'],
-            'unit_id' => ['required', 'integer', 'exists:units,id'],
+            'unit_uuid' => ['required', 'uuid', 'exists:units,uuid'],
         ]);
 
         $product->update($validated);

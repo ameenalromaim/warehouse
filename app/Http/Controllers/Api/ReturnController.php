@@ -3,47 +3,58 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\ReturnModel;
 use App\Models\ReturnItem;
+use App\Models\ReturnModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ReturnController extends Controller
 {
-    // 🔷 قائمة المردودات
     public function index(Request $request)
     {
-        $q = ReturnModel::with(['items.product', 'items.unit'])
+        $q = ReturnModel::with(['items.product', 'items.unit', 'supplier'])
             ->latest();
 
-        // فلترة اختيارية
         if ($request->type) {
-            $q->where('type', $request->type); // normal | damage
+            $q->where('type', $request->type);
         }
-        if ($request->from) {
-            $q->whereDate('date', '>=', $request->from);
+        if ($request->filled('supplier')) {
+            $s = $request->supplier;
+            $q->whereHas('supplier', function ($x) use ($s) {
+                $x->where('name', 'like', '%'.$s.'%');
+            });
         }
-        if ($request->to) {
-            $q->whereDate('date', '<=', $request->to);
+        if ($request->filled('product')) {
+            $p = $request->product;
+            $q->whereHas('items.product', function ($x) use ($p) {
+                $x->where('name', 'like', '%'.$p.'%');
+            });
+        }
+        if ($request->filled('date')) {
+            $q->whereDate('date', $request->date);
+        } else {
+            if ($request->from) {
+                $q->whereDate('date', '>=', $request->from);
+            }
+            if ($request->to) {
+                $q->whereDate('date', '<=', $request->to);
+            }
         }
 
         return response()->json($q->paginate(10));
     }
 
-    // 🔷 إنشاء مردود
     public function store(Request $request)
     {
         $request->validate([
             'date' => 'required|date',
             'type' => 'required|in:normal,damage',
+            'supplier_uuid' => 'nullable|uuid|exists:suppliers,uuid',
             'note' => 'nullable|string',
-            // اختياري لاحقًا:
-            // 'sale_id' => 'nullable|exists:sales,id',
-            // 'purchase_id' => 'nullable|exists:purchases,id',
 
             'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:product,id',
-            'items.*.unit_id' => 'required|exists:units,id',
+            'items.*.product_uuid' => 'required|uuid|exists:product,uuid',
+            'items.*.unit_uuid' => 'required|uuid|exists:units,uuid',
             'items.*.quantity' => 'required|numeric|min:0.01',
         ]);
 
@@ -52,93 +63,82 @@ class ReturnController extends Controller
             $return = ReturnModel::create([
                 'date' => $request->date,
                 'type' => $request->type,
+                'supplier_uuid' => $request->supplier_uuid,
                 'note' => $request->note,
-                // 'sale_id' => $request->sale_id,
-                // 'purchase_id' => $request->purchase_id,
             ]);
 
             $itemsPayload = [];
             foreach ($request->items as $item) {
                 $itemsPayload[] = new ReturnItem([
-                    'product_id' => $item['product_id'],
-                    'unit_id' => $item['unit_id'],
+                    'product_uuid' => $item['product_uuid'],
+                    'unit_uuid' => $item['unit_uuid'],
                     'quantity' => $item['quantity'],
                 ]);
             }
 
             $return->items()->saveMany($itemsPayload);
 
-            // 🔥 إن كان عندك جدول مخزون فعلي (stocks) عدّل هنا:
-            // if ($return->type === 'normal') => زيادة
-            // if ($return->type === 'damage') => إنقاص
-
             return response()->json([
                 'message' => 'تم حفظ المردود',
-                'data' => $return->load('items.product', 'items.unit'),
+                'data' => $return->load('items.product', 'items.unit', 'supplier'),
             ], 201);
         });
     }
 
-    // 🔷 عرض مردود واحد
-    public function show($id)
+    public function show(ReturnModel $warehouse_return)
     {
-        $return = ReturnModel::with(['items.product', 'items.unit'])
-            ->findOrFail($id);
+        $warehouse_return->load(['items.product', 'items.unit', 'supplier']);
 
-        return response()->json($return);
+        return response()->json($warehouse_return);
     }
 
-    // 🔷 حذف
-    public function destroy($id)
+    public function destroy(ReturnModel $warehouse_return)
     {
-        $return = ReturnModel::findOrFail($id);
-        $return->delete();
+        $warehouse_return->delete();
 
         return response()->json([
-            'message' => 'تم الحذف'
+            'message' => 'تم الحذف',
         ]);
     }
 
-    // 🔷 تحديث (اختياري لكن مهم)
-    public function update(Request $request, $id)
+    public function update(Request $request, ReturnModel $warehouse_return)
     {
         $request->validate([
             'date' => 'required|date',
             'type' => 'required|in:normal,damage',
+            'supplier_uuid' => 'nullable|uuid|exists:suppliers,uuid',
             'note' => 'nullable|string',
             'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:product,id',
-            'items.*.unit_id' => 'required|exists:units,id',
+            'items.*.product_uuid' => 'required|uuid|exists:product,uuid',
+            'items.*.unit_uuid' => 'required|uuid|exists:units,uuid',
             'items.*.quantity' => 'required|numeric|min:0.01',
         ]);
 
-        return DB::transaction(function () use ($request, $id) {
+        return DB::transaction(function () use ($request, $warehouse_return) {
 
-            $return = ReturnModel::findOrFail($id);
-
-            $return->update([
+            $warehouse_return->update([
                 'date' => $request->date,
                 'type' => $request->type,
+                'supplier_uuid' => $request->supplier_uuid,
                 'note' => $request->note,
             ]);
 
-            // حذف التفاصيل القديمة وإعادة إدخالها
-            $return->items()->delete();
+            $warehouse_return->items()->delete();
 
             $itemsPayload = [];
             foreach ($request->items as $item) {
                 $itemsPayload[] = new ReturnItem([
-                    'product_id' => $item['product_id'],
-                    'unit_id' => $item['unit_id'],
+                    'product_uuid' => $item['product_uuid'],
+                    'unit_uuid' => $item['unit_uuid'],
                     'quantity' => $item['quantity'],
                 ]);
             }
 
-            $return->items()->saveMany($itemsPayload);
+            $warehouse_return->items()->saveMany($itemsPayload);
 
             return response()->json([
                 'message' => 'تم التحديث',
-                'data' => $return->load('items.product', 'items.unit'),
+                'data' => $warehouse_return->load('items.product', 'items.unit', 'supplier'),
             ]);
         });
     }

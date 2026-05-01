@@ -230,23 +230,7 @@
 <body>
     @include('partials.site-header')
     <div class="app-shell">
-        <aside class="sidebar">
-            <h2 class="h5 sidebar-title">القائمة الرئيسية</h2>
-            <nav class="nav flex-column sidebar-nav">
-                <a class="nav-link {{ request()->routeIs('dashboard.purchases') ? 'active' : '' }}" href="{{ route('dashboard.purchases') }}">
-                    <i class="bi bi-receipt-cutoff"></i>
-                    فواتير المشتريات
-                </a>
-                <a class="nav-link {{ request()->routeIs('dashboard.suppliers') ? 'active' : '' }}" href="{{ route('dashboard.suppliers') }}">
-                    <i class="bi bi-truck"></i>
-                    الموردين
-                </a>
-                <a class="nav-link {{ request()->routeIs('dashboard.products') ? 'active' : '' }}" href="{{ route('dashboard.products') }}">
-                    <i class="bi bi-box-seam"></i>
-                    الاصناف
-                </a>
-            </nav>
-        </aside>
+        @include('partials.dashboard-sidebar')
 
         <div class="app-main">
             <header class="topbar p-3">
@@ -312,10 +296,10 @@
                                                         class="btn btn-sm btn-outline-primary"
                                                         data-bs-toggle="modal"
                                                         data-bs-target="#editProductModal"
-                                                        data-id="{{ $item->id }}"
+                                                        data-id="{{ $item->uuid }}"
                                                         data-name="{{ $item->name }}"
                                                         data-code="{{ $item->code }}"
-                                                        data-unit-id="{{ $item->unit_id }}"
+                                                        data-unit-uuid="{{ $item->unit_uuid }}"
                                                         data-description="{{ $item->description }}"
                                                     >
                                                         <i class="bi bi-pencil-square ms-1"></i>
@@ -428,9 +412,9 @@
                         </div>
                         <div class="mb-3">
                             <label for="product-unit-id" class="form-label">الوحدة</label>
-                            <select id="product-unit-id" name="unit_id" class="form-select" required>
+                            <select id="product-unit-id" name="unit_uuid" class="form-select" required>
                                 @foreach($units as $unit)
-                                    <option value="{{ $unit->id }}">{{ $unit->name }}</option>
+                                    <option value="{{ $unit->uuid }}">{{ $unit->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -461,7 +445,7 @@
                 const productId = button.getAttribute('data-id');
                 const productName = button.getAttribute('data-name') ?? '';
                 const productCode = button.getAttribute('data-code') ?? '';
-                const unitId = button.getAttribute('data-unit-id') ?? '';
+                const unitUuid = button.getAttribute('data-unit-uuid') ?? '';
                 const description = button.getAttribute('data-description') ?? '';
 
                 const form = document.getElementById('editProductForm');
@@ -472,8 +456,8 @@
                 document.getElementById('product-description').value = description;
 
                 const unitSelect = document.getElementById('product-unit-id');
-                if (unitSelect && unitId !== '') {
-                    unitSelect.value = unitId;
+                if (unitSelect && unitUuid !== '') {
+                    unitSelect.value = unitUuid;
                 }
             });
         }

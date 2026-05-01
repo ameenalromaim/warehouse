@@ -44,7 +44,7 @@ class ProductsImport implements ToModel, WithHeadingRow
         }
 
         $product->name = $productName;
-        $product->unit_id = $unit->id;
+        $product->unit_uuid = $unit->uuid;
         $product->description = $description;
         $product->code = $code;
 

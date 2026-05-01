@@ -215,16 +215,18 @@
             <p class="login-sub">سجّل بياناتك للوصول إلى لوحة إدارة المخازن</p>
 
             <div class="mb-3">
-                <label for="email" class="form-label">البريد الإلكتروني</label>
+                <label for="phone" class="form-label">رقم الهاتف</label>
                 <div class="login-field">
-                    <span class="login-field-icon" aria-hidden="true"><i class="bi bi-envelope"></i></span>
+                    <span class="login-field-icon" aria-hidden="true"><i class="bi bi-phone"></i></span>
                     <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        value="{{ old('email') }}"
+                        type="tel"
+                        id="phone"
+                        name="phone"
+                        value="{{ old('phone') }}"
                         class="form-control flex-grow-1"
-                        placeholder="you@example.com"
+                        placeholder="input your phone number"
+                        inputmode="numeric"
+                        autocomplete="username"
                         required
                     >
                 </div>
@@ -245,7 +247,7 @@
                 </div>
             </div>
 
-            @error('email')
+            @error('phone')
                 <div class="alert login-alert py-2 mb-3" role="alert">
                     <i class="bi bi-exclamation-circle ms-1"></i>
                     {{ $message }}

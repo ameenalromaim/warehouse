@@ -34,10 +34,18 @@ class PurchaseDashboardController extends Controller
 }
 
     // 📥 تصدير Excel
-    public function export()
-    {
-        return Excel::download(new PurchasesExport, 'purchases.xlsx');
-    }
+public function export()
+{
+    return Excel::download(
+        new PurchasesExport(
+            request('supplier'),
+            request('invoice'),
+            request('date'),
+            request('product')
+        ),
+        'purchases.xlsx'
+    );
+}
 
     public function exportOne(Purchase $purchase): BinaryFileResponse
     {
@@ -54,7 +62,7 @@ class PurchaseDashboardController extends Controller
     {
         $purchaseitem->load(['purchase.supplier', 'product', 'unit']);
 
-        $filename = 'purchase-'.$purchaseitem->purchase_id.'-line-'.$purchaseitem->id.'.xlsx';
+        $filename = 'purchase-'.substr($purchaseitem->purchase_uuid, 0, 8).'-line-'.$purchaseitem->id.'.xlsx';
 
         return Excel::download(new PurchaseItemLineExport($purchaseitem), $filename);
     }

@@ -10,92 +10,158 @@ use Illuminate\Support\Facades\DB;
 
 class PurchaseController extends Controller
 {
+    /**
+     * توليد رقم فاتورة تلقائي
+     * مثال:
+     * INV-20260502-00001
+     */
     private function generateInvoiceNumber(): string
     {
         $today = now()->format('Ymd');
-        $lastId = (int) Purchase::max('id');
-        $next = str_pad((string) ($lastId + 1), 5, '0', STR_PAD_LEFT);
+
+        $last = Purchase::latest('id')->first();
+        $nextId = $last ? $last->id + 1 : 1;
+
+        $next = str_pad((string) $nextId, 5, '0', STR_PAD_LEFT);
+
         return "INV-{$today}-{$next}";
     }
 
-    // 🔷 عرض الفواتير
+    /**
+     * عرض جميع الفواتير
+     */
     public function index()
     {
-        $purchases = Purchase::with(['supplier', 'items.product', 'items.unit'])
+        $purchases = Purchase::with([
+            'supplier',
+            'items.product',
+            'items.unit',
+        ])
             ->latest()
             ->paginate(10);
 
         return response()->json($purchases);
     }
 
-    // 🔷 إضافة فاتورة
+    /**
+     * حفظ فاتورة جديدة
+     */
     public function store(Request $request)
     {
         $request->validate([
-            'invoice_number' => 'nullable|string|max:255',
-            'supplier_id' => 'required|exists:suppliers,id',
+            'supplier_uuid' => 'required|uuid|exists:suppliers,uuid',
+            'date' => 'nullable|date',
+
             'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:product,id',
+            'items.*.product_uuid' => 'required|uuid|exists:product,uuid',
+            'items.*.unit_uuid' => 'required|uuid|exists:units,uuid',
             'items.*.quantity' => 'required|numeric|min:1',
             'items.*.price' => 'nullable|numeric|min:0',
         ]);
 
         return DB::transaction(function () use ($request) {
-            $invoiceNumber = trim((string) $request->invoice_number);
-            if ($invoiceNumber === '') {
-                $invoiceNumber = $this->generateInvoiceNumber();
-            }
 
             $purchase = Purchase::create([
-                'invoice_number' => $invoiceNumber,
-                'supplier_id' => $request->supplier_id,
+                'invoice_number' => $this->generateInvoiceNumber(),
+                'supplier_uuid' => $request->supplier_uuid,
                 'date' => $request->date ?? now(),
-                'notes' => $request->notes,
             ]);
 
-            $total = 0;
-
             foreach ($request->items as $item) {
-                $price = isset($item['price']) ? (float) $item['price'] : 0.0;
-                $itemTotal = (float) $item['quantity'] * $price;
-
                 purchaseitem::create([
-                    'purchase_id' => $purchase->id,
-                    'product_id' => $item['product_id'],
-                    'unit_id' => $item['unit_id'] ?? null,
+                    'purchase_uuid' => $purchase->uuid,
+                    'product_uuid' => $item['product_uuid'],
+                    'unit_uuid' => $item['unit_uuid'] ?? null,
                     'quantity' => $item['quantity'],
-                    'price' => $price,
+                    'price' => $item['price'] ?? 0,
                 ]);
-
-                $total += $itemTotal;
             }
 
-            $purchase->update(['total' => $total]);
-
             return response()->json([
-                'message' => 'تم حفظ الفاتورة',
-                'data' => $purchase->load('items')
+                'message' => 'تم حفظ الفاتورة بنجاح',
+                'data' => $purchase->load([
+                    'supplier',
+                    'items.product',
+                    'items.unit',
+                ]),
             ], 201);
         });
     }
 
-    // 🔷 عرض فاتورة واحدة
-    public function show($id)
+    /**
+     * عرض فاتورة واحدة
+     */
+    public function show(Purchase $purchase)
     {
-        $purchase = Purchase::with(['supplier', 'items.product', 'items.unit'])
-            ->findOrFail($id);
+        $purchase->load([
+            'supplier',
+            'items.product',
+            'items.unit',
+        ]);
 
         return response()->json($purchase);
     }
 
-    // 🔷 حذف فاتورة
-    public function destroy($id)
+    /**
+     * تعديل فاتورة
+     */
+    public function update(Request $request, Purchase $purchase)
     {
-        $purchase = Purchase::findOrFail($id);
-        $purchase->delete();
+        $request->validate([
+            'supplier_uuid' => 'required|uuid|exists:suppliers,uuid',
+            'date' => 'nullable|date',
 
-        return response()->json([
-            'message' => 'تم الحذف'
+            'items' => 'required|array|min:1',
+            'items.*.product_uuid' => 'required|uuid|exists:product,uuid',
+            'items.*.unit_uuid' => 'required|uuid|exists:units,uuid',
+            'items.*.quantity' => 'required|numeric|min:1',
+            'items.*.price' => 'nullable|numeric|min:0',
         ]);
+
+        return DB::transaction(function () use ($request, $purchase) {
+
+            $purchase->update([
+                'supplier_uuid' => $request->supplier_uuid,
+                'date' => $request->date ?? $purchase->date,
+            ]);
+
+            purchaseitem::where('purchase_uuid', $purchase->uuid)->delete();
+
+            foreach ($request->items as $item) {
+                purchaseitem::create([
+                    'purchase_uuid' => $purchase->uuid,
+                    'product_uuid' => $item['product_uuid'],
+                    'unit_uuid' => $item['unit_uuid'] ?? null,
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price'] ?? 0,
+                ]);
+            }
+
+            return response()->json([
+                'message' => 'تم تعديل الفاتورة بنجاح',
+                'data' => $purchase->load([
+                    'supplier',
+                    'items.product',
+                    'items.unit',
+                ]),
+            ]);
+        });
+    }
+
+    /**
+     * حذف فاتورة
+     */
+    public function destroy(Purchase $purchase)
+    {
+        return DB::transaction(function () use ($purchase) {
+
+            purchaseitem::where('purchase_uuid', $purchase->uuid)->delete();
+
+            $purchase->delete();
+
+            return response()->json([
+                'message' => 'تم حذف الفاتورة بنجاح',
+            ]);
+        });
     }
 }

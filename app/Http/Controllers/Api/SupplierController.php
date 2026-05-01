@@ -8,23 +8,19 @@ use Illuminate\Http\Request;
 
 class SupplierController extends Controller
 {
-    // 🔷 عرض الموردين
     public function index(Request $request)
     {
         $query = suppliers::query();
 
-        // 🔍 بحث
         if ($request->search) {
-            $query->where('name', 'like', '%' . $request->search . '%');
+            $query->where('name', 'like', '%'.$request->search.'%');
         }
 
-        // 📄 Pagination
         $suppliers = $query->latest()->paginate(10);
 
         return response()->json($suppliers);
     }
 
-    // 🔷 إضافة مورد
     public function store(Request $request)
     {
         $request->validate([
@@ -38,23 +34,17 @@ class SupplierController extends Controller
 
         return response()->json([
             'message' => 'تم إضافة المورد',
-            'data' => $supplier
+            'data' => $supplier,
         ], 201);
     }
 
-    // 🔷 عرض مورد واحد
-    public function show($id)
+    public function show(suppliers $supplier)
     {
-        $supplier = suppliers::findOrFail($id);
-
         return response()->json($supplier);
     }
 
-    // 🔷 تحديث مورد
-    public function update(Request $request, $id)
+    public function update(Request $request, suppliers $supplier)
     {
-        $supplier = suppliers::findOrFail($id);
-
         $request->validate([
             'name' => 'required|string|max:255',
             'phone' => 'nullable|string',
@@ -66,18 +56,16 @@ class SupplierController extends Controller
 
         return response()->json([
             'message' => 'تم التحديث',
-            'data' => $supplier
+            'data' => $supplier,
         ]);
     }
 
-    // 🔷 حذف مورد
-    public function destroy($id)
+    public function destroy(suppliers $supplier)
     {
-        $supplier = suppliers::findOrFail($id);
         $supplier->delete();
 
         return response()->json([
-            'message' => 'تم الحذف'
+            'message' => 'تم الحذف',
         ]);
     }
 }

@@ -8,28 +8,35 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Purchase extends Model
 {
+    use Concerns\HasUuidColumn;
+    use Concerns\Syncable;
+
     protected $table = 'purchase';
 
     protected $fillable = [
-        'supplier_id',
+        'supplier_uuid',
         'date',
         'invoice_number',
+        'updated_by_device',
     ];
 
     protected function casts(): array
     {
         return [
             'date' => 'date',
+            'deleted_at' => 'datetime',
+            'synced_at' => 'datetime',
+            'version' => 'integer',
         ];
     }
 
     public function supplier(): BelongsTo
     {
-        return $this->belongsTo(suppliers::class, 'supplier_id');
+        return $this->belongsTo(suppliers::class, 'supplier_uuid', 'uuid');
     }
 
     public function items(): HasMany
     {
-        return $this->hasMany(purchaseitem::class, 'purchase_id');
+        return $this->hasMany(purchaseitem::class, 'purchase_uuid', 'uuid');
     }
 }
