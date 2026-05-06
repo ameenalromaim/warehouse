@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\product;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -37,7 +37,7 @@ class ProductController extends Controller
             $code = $this->generateUniqueProductCode();
         }
 
-        $row = product::create([
+        $row = Product::create([
             'name' => $validated['name'],
             'code' => $code,
             'description' => $validated['description'] ?? null,
@@ -58,7 +58,7 @@ class ProductController extends Controller
     public function index()
     {
         return response()->json(
-            product::with('unit')->latest()->get()
+            Product::with('unit')->latest()->get()
         );
     }
 

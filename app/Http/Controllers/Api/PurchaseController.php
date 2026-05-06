@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Purchase;
-use App\Models\purchaseitem;
+use App\Models\PurchaseItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -56,7 +56,6 @@ class PurchaseController extends Controller
             'items.*.product_uuid' => 'required|uuid|exists:product,uuid',
             'items.*.unit_uuid' => 'required|uuid|exists:units,uuid',
             'items.*.quantity' => 'required|numeric|min:1',
-            'items.*.price' => 'nullable|numeric|min:0',
         ]);
 
         return DB::transaction(function () use ($request) {

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\units;
+use App\Models\Units;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -28,7 +28,7 @@ class UnitController extends Controller
             'name' => 'required|string|max:255|unique:units,name',
         ]);
 
-        $unit = units::create([
+        $unit = Units::create([
             'name' => trim($data['name']),
         ]);
 
