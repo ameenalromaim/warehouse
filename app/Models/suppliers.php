@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class suppliers extends Model
 {
     use Concerns\HasUuidColumn;
+    use Concerns\ScopedByBranch;
     use Concerns\Syncable;
 
     protected $table = 'suppliers';
@@ -16,6 +17,7 @@ class suppliers extends Model
         'phone',
         'address',
         'note',
+        'type_location',
         'updated_by_device',
     ];
 

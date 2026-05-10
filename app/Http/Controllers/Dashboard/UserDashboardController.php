@@ -7,43 +7,62 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
 class UserDashboardController extends Controller
 {
     /**
+     * قائمة الفروع للقوائم المنسدلة (ثابتة + أي فرع مسجل في النظام).
+     *
      * @return list<string>
      */
-    public static function locationOptions(): array
+    public static function branchOptions(): array
     {
-        return ['فرع ذهبان', 'فرع صرف'];
+        $defaults = ['فرع ذهبان', 'فرع صرف'];
+
+        $fromDb = User::query()
+            ->whereNotNull('type_location')
+            ->where('type_location', '!=', '')
+            ->distinct()
+            ->orderBy('type_location')
+            ->pluck('type_location')
+            ->all();
+
+        return array_values(array_unique(array_merge($defaults, $fromDb)));
     }
 
     public function index()
     {
         $users = User::query()->latest()->paginate(10);
-        $locationOptions = self::locationOptions();
+        $branchOptions = self::branchOptions();
 
-        return view('dashboard.users.index', compact('users', 'locationOptions'));
+        return view('dashboard.users.index', compact('users', 'branchOptions'));
     }
 
     public function create()
     {
-        $locationOptions = self::locationOptions();
+        $branchOptions = self::branchOptions();
 
-        return view('dashboard.users.create', compact('locationOptions'));
+        return view('dashboard.users.create', compact('branchOptions'));
     }
 
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
+        $rules = [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'phone' => ['required', 'string', 'max:32', Rule::unique('users', 'phone')],
-            'type_location' => ['required', 'string', Rule::in(self::locationOptions())],
+            'role' => ['required', Rule::in([User::ROLE_SUPER_ADMIN, User::ROLE_BRANCH_USER])],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-        ], $this->userValidationMessages());
+        ];
+
+        if ($request->input('role') === User::ROLE_BRANCH_USER) {
+            $rules['type_location'] = ['required', 'string', Rule::in(self::branchOptions())];
+        } else {
+            $rules['type_location'] = ['nullable', 'string'];
+        }
+
+        $validated = $request->validate($rules, $this->userValidationMessages());
 
         $phone = trim($validated['phone']);
 
@@ -51,7 +70,10 @@ class UserDashboardController extends Controller
             'name' => trim($validated['name']),
             'email' => trim($validated['email']),
             'phone' => $phone,
-            'type_location' => $validated['type_location'],
+            'role' => $validated['role'],
+            'type_location' => $validated['role'] === User::ROLE_BRANCH_USER
+                ? $validated['type_location']
+                : null,
             'password' => $validated['password'],
         ]);
 
@@ -62,13 +84,21 @@ class UserDashboardController extends Controller
 
     public function update(Request $request, User $user): RedirectResponse
     {
-        $validated = $request->validate([
+        $rules = [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'phone' => ['required', 'string', 'max:32', Rule::unique('users', 'phone')->ignore($user->id)],
-            'type_location' => ['required', 'string', Rule::in(self::locationOptions())],
+            'role' => ['required', Rule::in([User::ROLE_SUPER_ADMIN, User::ROLE_BRANCH_USER])],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
-        ], $this->userValidationMessages());
+        ];
+
+        if ($request->input('role') === User::ROLE_BRANCH_USER) {
+            $rules['type_location'] = ['required', 'string', Rule::in(self::branchOptions())];
+        } else {
+            $rules['type_location'] = ['nullable', 'string'];
+        }
+
+        $validated = $request->validate($rules, $this->userValidationMessages());
 
         $phone = trim($validated['phone']);
 
@@ -76,7 +106,10 @@ class UserDashboardController extends Controller
             'name' => trim($validated['name']),
             'email' => trim($validated['email']),
             'phone' => $phone,
-            'type_location' => $validated['type_location'],
+            'role' => $validated['role'],
+            'type_location' => $validated['role'] === User::ROLE_BRANCH_USER
+                ? $validated['type_location']
+                : null,
         ];
 
         if (! empty($validated['password'])) {

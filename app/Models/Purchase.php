@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Purchase extends Model
 {
     use Concerns\HasUuidColumn;
+    use Concerns\ScopedByBranch;
     use Concerns\Syncable;
 
     protected $table = 'purchase';
@@ -17,6 +18,7 @@ class Purchase extends Model
         'supplier_uuid',
         'date',
         'invoice_number',
+        'type_location',
         'updated_by_device',
     ];
 

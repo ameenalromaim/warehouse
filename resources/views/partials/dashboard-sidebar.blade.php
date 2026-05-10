@@ -21,10 +21,12 @@
             <i class="bi bi-exclamation-octagon"></i>
             تقرير التالف
         </a>
-            <a class="nav-link {{ request()->routeIs('dashboard.users') ? 'active' : '' }}" href="{{ route('dashboard.users') }}">
-                <i class="bi bi-people"></i>
-                 المستخدمين
-            </a>
+            @if(auth()->user()?->isSuperAdmin())
+                <a class="nav-link {{ request()->routeIs('dashboard.users') ? 'active' : '' }}" href="{{ route('dashboard.users') }}">
+                    <i class="bi bi-people"></i>
+                    المستخدمين
+                </a>
+            @endif
 
         {{-- <div class="sidebar-section mt-3 pt-2 border-top border-secondary border-opacity-25">
             <div class="sidebar-section-title px-2 mb-2 small fw-semibold text-secondary">الفروع</div>

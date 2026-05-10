@@ -11,13 +11,18 @@ class SupplierDashboardController extends Controller
 {
     public function index()
     {
-        $suppliers = suppliers::latest()->paginate(10);
+        $suppliers = suppliers::query()
+            ->forUserBranch(auth()->user())
+            ->latest()
+            ->paginate(10);
 
         return view('dashboard.suppliers.index', compact('suppliers'));
     }
 
     public function update(Request $request, suppliers $supplier): RedirectResponse
     {
+        $this->authorizeBranchRecord($supplier);
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:100'],
@@ -34,6 +39,8 @@ class SupplierDashboardController extends Controller
 
     public function destroy(suppliers $supplier): RedirectResponse
     {
+        $this->authorizeBranchRecord($supplier);
+
         $supplier->delete();
 
         return redirect()

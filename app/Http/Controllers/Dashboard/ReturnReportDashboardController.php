@@ -24,6 +24,7 @@ class ReturnReportDashboardController extends Controller
     protected function reportView(string $type, string $title)
     {
         $q = ReturnModel::where('type', $type)
+            ->forUserBranch(auth()->user())
             ->with(['items.product', 'items.unit', 'supplier']);
 
         if (request()->filled('supplier')) {

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class purchaseitem extends Model
 {
     use Concerns\HasUuidColumn;
+    use Concerns\ScopedByBranch;
     use Concerns\Syncable;
 
     protected $table = 'purchaseitem';
@@ -18,6 +19,7 @@ class purchaseitem extends Model
         'unit_uuid',
         'quantity',
         'price',
+        'type_location',
         'updated_by_device',
     ];
 

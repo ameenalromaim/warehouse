@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ReturnItem extends Model
 {
     use Concerns\HasUuidColumn;
+    use Concerns\ScopedByBranch;
     use Concerns\Syncable;
 
     protected $table = 'return_items';
@@ -17,6 +18,7 @@ class ReturnItem extends Model
         'product_uuid',
         'unit_uuid',
         'quantity',
+        'type_location',
         'updated_by_device',
     ];
 

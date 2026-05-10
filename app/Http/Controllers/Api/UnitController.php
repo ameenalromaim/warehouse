@@ -3,7 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Units;
+use App\Http\Support\ApiPresenter;
+use App\Models\units;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -14,8 +15,10 @@ class UnitController extends Controller
      */
     public function index()
     {
+        $rows = units::orderBy('name')->get();
+
         return response()->json(
-            units::orderBy('name')->get()
+            $rows->map(fn ($u) => ApiPresenter::unit($u))->values()
         );
     }
 
@@ -24,17 +27,19 @@ class UnitController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorizeSuperAdmin($request);
+
         $data = $request->validate([
             'name' => 'required|string|max:255|unique:units,name',
         ]);
 
-        $unit = Units::create([
+        $unit = units::create([
             'name' => trim($data['name']),
         ]);
 
         return response()->json([
             'message' => 'تم إنشاء الوحدة بنجاح',
-            'data' => $unit,
+            'data' => ApiPresenter::unit($unit),
         ], 201);
     }
 
@@ -43,7 +48,7 @@ class UnitController extends Controller
      */
     public function show(units $unit)
     {
-        return response()->json($unit);
+        return response()->json(ApiPresenter::unit($unit));
     }
 
     /**
@@ -51,6 +56,8 @@ class UnitController extends Controller
      */
     public function update(Request $request, units $unit)
     {
+        $this->authorizeSuperAdmin($request);
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255', Rule::unique('units', 'name')->ignore($unit->uuid, 'uuid')],
         ]);
@@ -61,19 +68,28 @@ class UnitController extends Controller
 
         return response()->json([
             'message' => 'تم تعديل الوحدة بنجاح',
-            'data' => $unit,
+            'data' => ApiPresenter::unit($unit->fresh()),
         ]);
     }
 
     /**
      * حذف وحدة
      */
-    public function destroy(units $unit)
+    public function destroy(Request $request, units $unit)
     {
+        $this->authorizeSuperAdmin($request);
+
         $unit->delete();
 
         return response()->json([
             'message' => 'تم حذف الوحدة بنجاح',
         ]);
+    }
+
+    private function authorizeSuperAdmin(Request $request): void
+    {
+        if (! $request->user()?->isSuperAdmin()) {
+            abort(403, __('تعديل الوحدات متاح لسوبر الأدمن فقط.'));
+        }
     }
 }

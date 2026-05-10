@@ -13,7 +13,10 @@ class ProductDashboardController extends Controller
 {
     public function index()
     {
-        $products = product::with('unit')->latest()->paginate(10);
+        $products = product::with('unit')
+            ->forUserBranch(auth()->user())
+            ->latest()
+            ->paginate(10);
         $units = units::orderBy('name')->get();
 
         return view('dashboard.products.index', compact('products', 'units'));
@@ -21,6 +24,8 @@ class ProductDashboardController extends Controller
 
     public function update(Request $request, product $product): RedirectResponse
     {
+        $this->authorizeBranchRecord($product);
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'code' => ['nullable', 'string', 'max:255', Rule::unique('product', 'code')->ignore($product->uuid, 'uuid')],
@@ -37,6 +42,8 @@ class ProductDashboardController extends Controller
 
     public function destroy(product $product): RedirectResponse
     {
+        $this->authorizeBranchRecord($product);
+
         $product->delete();
 
         return redirect()

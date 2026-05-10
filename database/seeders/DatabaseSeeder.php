@@ -20,7 +20,8 @@ class DatabaseSeeder extends Seeder
             ['phone' => '771738225'],
             [
                 'name' => 'مستخدم تجريبي',
-                'type_location' => 'main',
+                'role' => User::ROLE_SUPER_ADMIN,
+                'type_location' => null,
                 'email' => '771738225@dashboard.local',
                 'password' => Hash::make('password'),
             ]

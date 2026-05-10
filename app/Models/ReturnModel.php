@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class ReturnModel extends Model
 {
     use Concerns\HasUuidColumn;
+    use Concerns\ScopedByBranch;
     use Concerns\Syncable;
 
     protected $table = 'returns';
@@ -18,6 +19,7 @@ class ReturnModel extends Model
         'type',
         'supplier_uuid',
         'note',
+        'type_location',
         'updated_by_device',
     ];
 

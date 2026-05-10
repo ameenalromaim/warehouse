@@ -3,10 +3,15 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Support\ApiPresenter;
+use App\Models\product;
 use App\Models\Purchase;
-use App\Models\PurchaseItem;
+use App\Models\purchaseitem;
+use App\Models\suppliers;
+use App\Support\BranchData;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class PurchaseController extends Controller
 {
@@ -30,17 +35,20 @@ class PurchaseController extends Controller
     /**
      * عرض جميع الفواتير
      */
-    public function index()
+    public function index(Request $request)
     {
         $purchases = Purchase::with([
             'supplier',
             'items.product',
             'items.unit',
         ])
+            ->forUserBranch($request->user())
             ->latest()
             ->paginate(10);
 
-        return response()->json($purchases);
+        return response()->json(
+            $purchases->through(fn ($p) => ApiPresenter::purchase($p))
+        );
     }
 
     /**
@@ -51,6 +59,7 @@ class PurchaseController extends Controller
         $request->validate([
             'supplier_uuid' => 'required|uuid|exists:suppliers,uuid',
             'date' => 'nullable|date',
+            'type_location' => 'nullable|string|max:255',
 
             'items' => 'required|array|min:1',
             'items.*.product_uuid' => 'required|uuid|exists:product,uuid',
@@ -58,12 +67,35 @@ class PurchaseController extends Controller
             'items.*.quantity' => 'required|numeric|min:1',
         ]);
 
-        return DB::transaction(function () use ($request) {
+        $this->assertBranchUserHasBranch($request);
+
+        $loc = BranchData::locationForWrite($request);
+
+        if (! suppliers::query()->forUserBranch($request->user())->where('uuid', $request->supplier_uuid)->exists()) {
+            throw ValidationException::withMessages([
+                'supplier_uuid' => [__('المورد غير متاح لهذا الفرع.')],
+            ]);
+        }
+
+        $productUuids = collect($request->items)->pluck('product_uuid')->unique()->values();
+        $countOk = product::query()
+            ->forUserBranch($request->user())
+            ->whereIn('uuid', $productUuids)
+            ->count();
+
+        if ($countOk !== $productUuids->count()) {
+            throw ValidationException::withMessages([
+                'items' => [__('أحد الأصناف غير تابع لفرعك.')],
+            ]);
+        }
+
+        return DB::transaction(function () use ($request, $loc) {
 
             $purchase = Purchase::create([
                 'invoice_number' => $this->generateInvoiceNumber(),
                 'supplier_uuid' => $request->supplier_uuid,
                 'date' => $request->date ?? now(),
+                'type_location' => $loc,
             ]);
 
             foreach ($request->items as $item) {
@@ -73,16 +105,17 @@ class PurchaseController extends Controller
                     'unit_uuid' => $item['unit_uuid'] ?? null,
                     'quantity' => $item['quantity'],
                     'price' => $item['price'] ?? 0,
+                    'type_location' => $loc,
                 ]);
             }
 
             return response()->json([
                 'message' => 'تم حفظ الفاتورة بنجاح',
-                'data' => $purchase->load([
+                'data' => ApiPresenter::purchase($purchase->load([
                     'supplier',
                     'items.product',
                     'items.unit',
-                ]),
+                ])),
             ], 201);
         });
     }
@@ -90,15 +123,17 @@ class PurchaseController extends Controller
     /**
      * عرض فاتورة واحدة
      */
-    public function show(Purchase $purchase)
+    public function show(Request $request, Purchase $purchase)
     {
+        $this->authorizeBranchRecord($purchase);
+
         $purchase->load([
             'supplier',
             'items.product',
             'items.unit',
         ]);
 
-        return response()->json($purchase);
+        return response()->json(ApiPresenter::purchase($purchase));
     }
 
     /**
@@ -106,9 +141,12 @@ class PurchaseController extends Controller
      */
     public function update(Request $request, Purchase $purchase)
     {
+        $this->authorizeBranchRecord($purchase);
+
         $request->validate([
             'supplier_uuid' => 'required|uuid|exists:suppliers,uuid',
             'date' => 'nullable|date',
+            'type_location' => 'nullable|string|max:255',
 
             'items' => 'required|array|min:1',
             'items.*.product_uuid' => 'required|uuid|exists:product,uuid',
@@ -117,11 +155,34 @@ class PurchaseController extends Controller
             'items.*.price' => 'nullable|numeric|min:0',
         ]);
 
-        return DB::transaction(function () use ($request, $purchase) {
+        $this->assertBranchUserHasBranch($request);
+
+        $loc = BranchData::locationForWrite($request);
+
+        if (! suppliers::query()->forUserBranch($request->user())->where('uuid', $request->supplier_uuid)->exists()) {
+            throw ValidationException::withMessages([
+                'supplier_uuid' => [__('المورد غير متاح لهذا الفرع.')],
+            ]);
+        }
+
+        $productUuids = collect($request->items)->pluck('product_uuid')->unique()->values();
+        $countOk = product::query()
+            ->forUserBranch($request->user())
+            ->whereIn('uuid', $productUuids)
+            ->count();
+
+        if ($countOk !== $productUuids->count()) {
+            throw ValidationException::withMessages([
+                'items' => [__('أحد الأصناف غير تابع لفرعك.')],
+            ]);
+        }
+
+        return DB::transaction(function () use ($request, $purchase, $loc) {
 
             $purchase->update([
                 'supplier_uuid' => $request->supplier_uuid,
                 'date' => $request->date ?? $purchase->date,
+                'type_location' => $loc,
             ]);
 
             purchaseitem::where('purchase_uuid', $purchase->uuid)->delete();
@@ -133,16 +194,17 @@ class PurchaseController extends Controller
                     'unit_uuid' => $item['unit_uuid'] ?? null,
                     'quantity' => $item['quantity'],
                     'price' => $item['price'] ?? 0,
+                    'type_location' => $loc,
                 ]);
             }
 
             return response()->json([
                 'message' => 'تم تعديل الفاتورة بنجاح',
-                'data' => $purchase->load([
+                'data' => ApiPresenter::purchase($purchase->load([
                     'supplier',
                     'items.product',
                     'items.unit',
-                ]),
+                ])),
             ]);
         });
     }
@@ -150,8 +212,10 @@ class PurchaseController extends Controller
     /**
      * حذف فاتورة
      */
-    public function destroy(Purchase $purchase)
+    public function destroy(Request $request, Purchase $purchase)
     {
+        $this->authorizeBranchRecord($purchase);
+
         return DB::transaction(function () use ($purchase) {
 
             purchaseitem::where('purchase_uuid', $purchase->uuid)->delete();
@@ -162,5 +226,16 @@ class PurchaseController extends Controller
                 'message' => 'تم حذف الفاتورة بنجاح',
             ]);
         });
+    }
+
+    private function assertBranchUserHasBranch(Request $request): void
+    {
+        $user = $request->user();
+
+        if ($user && $user->isBranchUser() && $user->branchScopeKey() === null) {
+            throw ValidationException::withMessages([
+                'type_location' => [__('لم يُعرَّف فرع لهذا المستخدم.')],
+            ]);
+        }
     }
 }

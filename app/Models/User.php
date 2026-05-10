@@ -19,12 +19,17 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
+    public const ROLE_SUPER_ADMIN = 'super_admin';
+
+    public const ROLE_BRANCH_USER = 'branch_user';
+
     protected $fillable = [
         'name',
         'type_location',
         'email',
         'phone',
         'password',
+        'role',
     ];
 
     /**
@@ -51,5 +56,44 @@ class User extends Authenticatable
             'synced_at' => 'datetime',
             'version' => 'integer',
         ];
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === self::ROLE_SUPER_ADMIN;
+    }
+
+    public function isBranchUser(): bool
+    {
+        return $this->role === self::ROLE_BRANCH_USER;
+    }
+
+    /**
+     * مفتاح الفرع لفلترة البيانات؛ null للسوبر أدمن (= كل الفروع).
+     */
+    public function branchScopeKey(): ?string
+    {
+        if ($this->isSuperAdmin()) {
+            return null;
+        }
+
+        $loc = trim((string) $this->type_location);
+
+        return $loc !== '' ? $loc : null;
+    }
+
+    public function canAccessBranchRecord(mixed $recordLocation): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        $userLoc = $this->branchScopeKey();
+
+        if ($userLoc === null) {
+            return false;
+        }
+
+        return (string) $recordLocation === $userLoc;
     }
 }

@@ -280,7 +280,8 @@
                                         <th class="ps-4">الاسم</th>
                                         <th>البريد</th>
                                         <th>الهاتف</th>
-                                        <th>الموقع / الفرع</th>
+                                        <th>الصلاحية</th>
+                                        <th>الفرع</th>
                                         <th class="pe-4 text-center">الاجراءات</th>
                                     </tr>
                                 </thead>
@@ -290,7 +291,8 @@
                                             <td class="ps-4 fw-semibold text-dark">{{ $item->name ?? '—' }}</td>
                                             <td>{{ $item->email ?? '—' }}</td>
                                             <td>{{ $item->phone ?? '—' }}</td>
-                                            <td>{{ $item->type_location ? $item->type_location : '—' }}</td>
+                                            <td>{{ $item->role === 'super_admin' ? 'سوبر أدمن' : 'مستخدم فرع' }}</td>
+                                            <td>{{ $item->role === 'branch_user' && $item->type_location ? $item->type_location : '—' }}</td>
                                             <td class="pe-4">
                                                 <div class="d-flex justify-content-center gap-2 actions-cell">
                                                     <button
@@ -303,6 +305,7 @@
                                                         data-email="{{ $item->email }}"
                                                         data-phone="{{ $item->phone ?? '' }}"
                                                         data-type-location="{{ $item->type_location ?? '' }}"
+                                                        data-role="{{ $item->role ?? 'branch_user' }}"
                                                     >
                                                         <i class="bi bi-pencil-square ms-1"></i>
                                                         تعديل
@@ -394,10 +397,17 @@
                             @enderror
                         </div>
                         <div class="mb-3">
-                            <label for="user-type-location" class="form-label">الموقع / الفرع</label>
-                            <select id="user-type-location" name="type_location" class="form-select" required>
-                                <option value="">اختر الموقع</option>
-                                @foreach($locationOptions as $loc)
+                            <label for="user-role" class="form-label">الصلاحية</label>
+                            <select id="user-role" name="role" class="form-select" required>
+                                <option value="super_admin">سوبر أدمن</option>
+                                <option value="branch_user">مستخدم فرع</option>
+                            </select>
+                        </div>
+                        <div class="mb-3" id="edit-branch-field-wrapper" style="display: none;">
+                            <label for="user-type-location" class="form-label">الفرع</label>
+                            <select id="user-type-location" name="type_location" class="form-select">
+                                <option value="">اختر الفرع</option>
+                                @foreach($branchOptions as $loc)
                                     <option value="{{ $loc }}">{{ $loc }}</option>
                                 @endforeach
                             </select>
@@ -439,14 +449,51 @@
                 document.getElementById('user-email').value = button.getAttribute('data-email') ?? '';
                 document.getElementById('user-phone').value = button.getAttribute('data-phone') ?? '';
 
+                const roleSelect = document.getElementById('user-role');
+                const roleVal = button.getAttribute('data-role') ?? 'branch_user';
+                if (roleSelect) {
+                    roleSelect.value = roleVal === 'super_admin' ? 'super_admin' : 'branch_user';
+                }
+
+                const branchWrap = document.getElementById('edit-branch-field-wrapper');
                 const locSelect = document.getElementById('user-type-location');
                 const loc = button.getAttribute('data-type-location') ?? '';
-                const hasOption = loc !== '' && Array.from(locSelect.options).some((o) => o.value === loc);
-                locSelect.value = hasOption ? loc : '';
+                const showBranch = roleVal === 'branch_user';
+
+                if (branchWrap) {
+                    branchWrap.style.display = showBranch ? 'block' : 'none';
+                }
+                if (locSelect) {
+                    locSelect.required = showBranch;
+                    const hasOption = loc !== '' && Array.from(locSelect.options).some((o) => o.value === loc);
+                    locSelect.value = showBranch && hasOption ? loc : '';
+                }
 
                 document.getElementById('user-password').value = '';
                 document.getElementById('user-password-confirmation').value = '';
+
+                syncEditBranchVisibility();
             });
+        }
+
+        const userRoleSelect = document.getElementById('user-role');
+        const editBranchWrap = document.getElementById('edit-branch-field-wrapper');
+        const userLocSelect = document.getElementById('user-type-location');
+
+        function syncEditBranchVisibility() {
+            if (!userRoleSelect || !editBranchWrap || !userLocSelect) {
+                return;
+            }
+            const show = userRoleSelect.value === 'branch_user';
+            editBranchWrap.style.display = show ? 'block' : 'none';
+            userLocSelect.required = show;
+            if (!show) {
+                userLocSelect.value = '';
+            }
+        }
+
+        if (userRoleSelect) {
+            userRoleSelect.addEventListener('change', syncEditBranchVisibility);
         }
 
         const deleteUserModal = document.getElementById('deleteUserModal');

@@ -155,10 +155,18 @@
                                 @enderror
                             </div>
                             <div class="mb-3">
-                                <label for="type_location" class="form-label fw-semibold">الموقع / الفرع</label>
-                                <select id="type_location" name="type_location" class="form-select form-select-lg" required>
-                                    <option value="" @selected(old('type_location', '') === '')>اختر الموقع</option>
-                                    @foreach($locationOptions as $loc)
+                                <label for="role" class="form-label fw-semibold">الصلاحية</label>
+                                <select id="role" name="role" class="form-select form-select-lg" required>
+                                    <option value="" @selected(old('role', '') === '')>اختر الدور</option>
+                                    <option value="super_admin" @selected(old('role') === 'super_admin')>سوبر أدمن</option>
+                                    <option value="branch_user" @selected(old('role') === 'branch_user')>مستخدم فرع</option>
+                                </select>
+                            </div>
+                            <div class="mb-3" id="branch-field-wrapper" style="display: none;">
+                                <label for="type_location" class="form-label fw-semibold">الفرع</label>
+                                <select id="type_location" name="type_location" class="form-select form-select-lg">
+                                    <option value="" @selected(old('type_location', '') === '')>اختر الفرع</option>
+                                    @foreach($branchOptions as $loc)
                                         <option value="{{ $loc }}" @selected(old('type_location') === $loc)>{{ $loc }}</option>
                                     @endforeach
                                 </select>
@@ -185,5 +193,31 @@
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (function () {
+            const role = document.getElementById('role');
+            const wrap = document.getElementById('branch-field-wrapper');
+            const branch = document.getElementById('type_location');
+
+            function syncBranchVisibility() {
+                const v = role ? role.value : '';
+                const show = v === 'branch_user';
+                if (wrap) {
+                    wrap.style.display = show ? 'block' : 'none';
+                }
+                if (branch) {
+                    branch.required = show;
+                    if (!show) {
+                        branch.value = '';
+                    }
+                }
+            }
+
+            if (role) {
+                role.addEventListener('change', syncBranchVisibility);
+                syncBranchVisibility();
+            }
+        })();
+    </script>
 </body>
 </html>

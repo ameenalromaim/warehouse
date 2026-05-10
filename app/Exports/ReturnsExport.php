@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\ReturnModel;
+use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
@@ -32,7 +33,8 @@ class ReturnsExport implements FromCollection, WithHeadings
     public function collection()
     {
         $query = ReturnModel::with(['items.product', 'items.unit', 'supplier'])
-            ->where('type', $this->type);
+            ->where('type', $this->type)
+            ->forUserBranch(Auth::user());
 
         if ($this->supplier) {
             $query->whereHas('supplier', function ($q) {

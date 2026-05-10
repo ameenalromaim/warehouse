@@ -8,14 +8,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class product extends Model
 {
     use Concerns\HasUuidColumn;
+    use Concerns\ScopedByBranch;
     use Concerns\Syncable;
 
     protected $table = 'product';
+
     protected $fillable = [
         'name',
         'code',
         'description',
         'unit_uuid',
+        'type_location',
         'updated_by_device',
     ];
 
@@ -28,10 +31,10 @@ class product extends Model
         ];
     }
 
-// public function unit()
-// {
-//     return $this->belongsTo(Unit::class);
-// }
+    // public function unit()
+    // {
+    //     return $this->belongsTo(Unit::class);
+    // }
 
     public function unit(): BelongsTo
     {
