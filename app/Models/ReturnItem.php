@@ -19,6 +19,7 @@ class ReturnItem extends Model
         'unit_uuid',
         'quantity',
         'type_location',
+        'user_id',
         'updated_by_device',
     ];
 
@@ -39,5 +40,10 @@ class ReturnItem extends Model
     public function unit(): BelongsTo
     {
         return $this->belongsTo(units::class, 'unit_uuid', 'uuid');
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

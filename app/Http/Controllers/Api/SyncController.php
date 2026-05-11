@@ -109,6 +109,8 @@ class SyncController extends Controller
 
         $exists = DB::table($table)->where('uuid', $uuid)->first();
 
+        unset($data['user_id']);
+
         $data['uuid'] = $uuid;
         $data['updated_at'] = now();
         $data['synced_at'] = now();
@@ -143,6 +145,10 @@ class SyncController extends Controller
         } else {
             $data['version'] = 1;
             $data['created_at'] = now();
+
+            if ($user instanceof User && Schema::hasColumn($table, 'user_id')) {
+                $data['user_id'] = $user->getKey();
+            }
 
             DB::table($table)->insert($data);
         }

@@ -48,6 +48,10 @@ class ProductsImport implements ToModel, WithHeadingRow
         $product->description = $description;
         $product->code = $code;
 
+        if (! $product->exists && auth()->check()) {
+            $product->user_id = auth()->id();
+        }
+
         $product->save();
 
         return $product;

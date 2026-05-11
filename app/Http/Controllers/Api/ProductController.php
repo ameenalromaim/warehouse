@@ -55,11 +55,12 @@ class ProductController extends Controller
             'description' => $validated['description'] ?? null,
             'unit_uuid' => $validated['unit_uuid'],
             'type_location' => $loc,
+            'user_id' => $request->user()->id,
         ]);
 
         return response()->json([
             'message' => 'تم إنشاء المنتج بنجاح',
-            'data' => ApiPresenter::product($row->load('unit')),
+            'data' => ApiPresenter::product($row->load(['unit', 'creator'])),
         ], 201);
     }
 
@@ -69,7 +70,7 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $rows = product::query()
-            ->with('unit')
+            ->with(['unit', 'creator'])
             ->forUserBranch($request->user())
             ->latest()
             ->get();
@@ -86,7 +87,7 @@ class ProductController extends Controller
     {
         $this->authorizeBranchRecord($product);
 
-        return response()->json(ApiPresenter::product($product->load('unit')));
+        return response()->json(ApiPresenter::product($product->load(['unit', 'creator'])));
     }
 
     /**
@@ -137,7 +138,7 @@ class ProductController extends Controller
 
         return response()->json([
             'message' => 'تم تعديل المنتج بنجاح',
-            'data' => ApiPresenter::product($product->load('unit')),
+            'data' => ApiPresenter::product($product->load(['unit', 'creator'])),
         ]);
     }
 

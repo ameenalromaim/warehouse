@@ -26,6 +26,7 @@ class PurchaseDashboardController extends Controller
     {
         $purchases = Purchase::with([
             'supplier',
+            'creator',
             'items.product',
             'items.unit',
         ])

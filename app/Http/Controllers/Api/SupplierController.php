@@ -13,7 +13,9 @@ class SupplierController extends Controller
 {
     public function index(Request $request)
     {
-        $query = suppliers::query()->forUserBranch($request->user());
+        $query = suppliers::query()
+            ->with('creator')
+            ->forUserBranch($request->user());
 
         if ($request->search) {
             $query->where('name', 'like', '%'.$request->search.'%');
@@ -42,12 +44,15 @@ class SupplierController extends Controller
 
         $supplier = suppliers::create(array_merge(
             $request->only('name', 'phone', 'address', 'note'),
-            ['type_location' => $loc]
+            [
+                'type_location' => $loc,
+                'user_id' => $request->user()->id,
+            ]
         ));
 
         return response()->json([
             'message' => 'تم إضافة المورد',
-            'data' => ApiPresenter::supplier($supplier),
+            'data' => ApiPresenter::supplier($supplier->load('creator')),
         ], 201);
     }
 
@@ -55,7 +60,7 @@ class SupplierController extends Controller
     {
         $this->authorizeBranchRecord($supplier);
 
-        return response()->json(ApiPresenter::supplier($supplier));
+        return response()->json(ApiPresenter::supplier($supplier->load('creator')));
     }
 
     public function update(Request $request, suppliers $supplier)
@@ -81,7 +86,7 @@ class SupplierController extends Controller
 
         return response()->json([
             'message' => 'تم التحديث',
-            'data' => ApiPresenter::supplier($supplier->fresh()),
+            'data' => ApiPresenter::supplier($supplier->fresh()->load('creator')),
         ]);
     }
 

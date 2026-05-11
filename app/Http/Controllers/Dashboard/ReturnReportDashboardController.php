@@ -25,7 +25,7 @@ class ReturnReportDashboardController extends Controller
     {
         $q = ReturnModel::where('type', $type)
             ->forUserBranch(auth()->user())
-            ->with(['items.product', 'items.unit', 'supplier']);
+            ->with(['items.product', 'items.unit', 'supplier', 'creator']);
 
         if (request()->filled('supplier')) {
             $s = request('supplier');

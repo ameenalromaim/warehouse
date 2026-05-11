@@ -17,7 +17,7 @@ class ReturnController extends Controller
 {
     public function index(Request $request)
     {
-        $q = ReturnModel::with(['items.product', 'items.unit', 'supplier'])
+        $q = ReturnModel::with(['items.product', 'items.unit', 'supplier', 'creator'])
             ->forUserBranch($request->user())
             ->latest();
 
@@ -98,6 +98,7 @@ class ReturnController extends Controller
                 'supplier_uuid' => $request->supplier_uuid,
                 'note' => $request->note,
                 'type_location' => $loc,
+                'user_id' => $request->user()->id,
             ]);
 
             $itemsPayload = [];
@@ -107,6 +108,7 @@ class ReturnController extends Controller
                     'unit_uuid' => $item['unit_uuid'],
                     'quantity' => $item['quantity'],
                     'type_location' => $loc,
+                    'user_id' => $request->user()->id,
                 ]);
             }
 
@@ -114,7 +116,7 @@ class ReturnController extends Controller
 
             return response()->json([
                 'message' => 'تم حفظ المردود',
-                'data' => ApiPresenter::warehouseReturn($return->load('items.product', 'items.unit', 'supplier')),
+                'data' => ApiPresenter::warehouseReturn($return->load('items.product', 'items.unit', 'supplier', 'creator')),
             ], 201);
         });
     }
@@ -123,7 +125,7 @@ class ReturnController extends Controller
     {
         $this->authorizeBranchRecord($warehouse_return);
 
-        $warehouse_return->load(['items.product', 'items.unit', 'supplier']);
+        $warehouse_return->load(['items.product', 'items.unit', 'supplier', 'creator']);
 
         return response()->json(ApiPresenter::warehouseReturn($warehouse_return));
     }
@@ -197,6 +199,7 @@ class ReturnController extends Controller
                     'unit_uuid' => $item['unit_uuid'],
                     'quantity' => $item['quantity'],
                     'type_location' => $loc,
+                    'user_id' => $request->user()->id,
                 ]);
             }
 
@@ -204,7 +207,7 @@ class ReturnController extends Controller
 
             return response()->json([
                 'message' => 'تم التحديث',
-                'data' => ApiPresenter::warehouseReturn($warehouse_return->load('items.product', 'items.unit', 'supplier')),
+                'data' => ApiPresenter::warehouseReturn($warehouse_return->load('items.product', 'items.unit', 'supplier', 'creator')),
             ]);
         });
     }

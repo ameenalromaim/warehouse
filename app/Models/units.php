@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class units extends Model
 {
@@ -13,6 +14,7 @@ class units extends Model
 
     protected $fillable = [
         'name',
+        'user_id',
         'updated_by_device',
     ];
 
@@ -23,5 +25,10 @@ class units extends Model
             'synced_at' => 'datetime',
             'version' => 'integer',
         ];
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

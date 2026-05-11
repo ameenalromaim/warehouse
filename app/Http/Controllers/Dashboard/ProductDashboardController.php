@@ -13,7 +13,7 @@ class ProductDashboardController extends Controller
 {
     public function index()
     {
-        $products = product::with('unit')
+        $products = product::with(['unit', 'creator'])
             ->forUserBranch(auth()->user())
             ->latest()
             ->paginate(10);

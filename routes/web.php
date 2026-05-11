@@ -20,7 +20,8 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+    // GET + POST: يمنع 419 عند فتح /logout من شريط العنوان، ولا يزال POST من النموذج يعمل مع @csrf
+    Route::match(['get', 'post'], '/logout', [LoginController::class, 'logout'])->name('logout');
 
     Route::get('/dashboard/purchases', [PurchaseDashboardController::class, 'index'])->name('dashboard.purchases');
     Route::get('/dashboard/purchases/export', [PurchaseDashboardController::class, 'export'])->name('dashboard.purchases.export');

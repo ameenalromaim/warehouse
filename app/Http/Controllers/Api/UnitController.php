@@ -15,7 +15,7 @@ class UnitController extends Controller
      */
     public function index()
     {
-        $rows = units::orderBy('name')->get();
+        $rows = units::query()->with('creator')->orderBy('name')->get();
 
         return response()->json(
             $rows->map(fn ($u) => ApiPresenter::unit($u))->values()
@@ -35,11 +35,12 @@ class UnitController extends Controller
 
         $unit = units::create([
             'name' => trim($data['name']),
+            'user_id' => $request->user()->id,
         ]);
 
         return response()->json([
             'message' => 'تم إنشاء الوحدة بنجاح',
-            'data' => ApiPresenter::unit($unit),
+            'data' => ApiPresenter::unit($unit->load('creator')),
         ], 201);
     }
 
@@ -48,7 +49,7 @@ class UnitController extends Controller
      */
     public function show(units $unit)
     {
-        return response()->json(ApiPresenter::unit($unit));
+        return response()->json(ApiPresenter::unit($unit->load('creator')));
     }
 
     /**
@@ -68,7 +69,7 @@ class UnitController extends Controller
 
         return response()->json([
             'message' => 'تم تعديل الوحدة بنجاح',
-            'data' => ApiPresenter::unit($unit->fresh()),
+            'data' => ApiPresenter::unit($unit->fresh()->load('creator')),
         ]);
     }
 

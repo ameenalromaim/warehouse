@@ -19,6 +19,7 @@ class Purchase extends Model
         'date',
         'invoice_number',
         'type_location',
+        'user_id',
         'updated_by_device',
     ];
 
@@ -40,5 +41,10 @@ class Purchase extends Model
     public function items(): HasMany
     {
         return $this->hasMany(purchaseitem::class, 'purchase_uuid', 'uuid');
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

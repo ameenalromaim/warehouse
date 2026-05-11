@@ -4,6 +4,9 @@ use App\Http\Middleware\EnsureSuperAdmin;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -13,10 +16,37 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->redirectGuestsTo(fn () => route('login'));
+
         $middleware->alias([
             'super_admin' => EnsureSuperAdmin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // زيارة صفحة محمية بدون جلسة صالحة → تسجيل الدخول مع تنبيه
+        $exceptions->render(function (AuthenticationException $e, Request $request) {
+            if ($request->expectsJson()) {
+                return null;
+            }
+
+            return redirect()->guest(route('login'))
+                ->with('session_expired', 'يرجى تسجيل الدخول للمتابعة.');
+        });
+
+        // 419: انتهاء الجلسة أو عدم تطابق CSRF — إعادة لتسجيل الدخول بدل صفحة «انتهت الصلاحية»
+        $exceptions->render(function (HttpException $e, Request $request) {
+            if ($e->getStatusCode() !== 419) {
+                return null;
+            }
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'انتهت صلاحية الجلسة. يرجى تسجيل الدخول من جديد.',
+                ], 419);
+            }
+
+            return redirect()
+                ->route('login')
+                ->with('session_expired', 'انتهت صلاحية الجلسة. يرجى تسجيل الدخول من جديد.');
+        });
     })->create();

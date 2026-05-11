@@ -228,6 +228,7 @@ value="{{ request('product') }}" placeholder="اسم الصنف" autocomplete="o
 <th class="ps-4">رقم الحركة</th>
 <th>التاريخ</th>
 <th>المورد</th>
+<th>أضيف بواسطة</th>
 <th>الصنف</th>
 <th>الوحدة</th>
 <th>الكمية</th>
@@ -239,7 +240,7 @@ value="{{ request('product') }}" placeholder="اسم الصنف" autocomplete="o
 
 @if($returns->isEmpty())
 <tr>
-<td colspan="7" class="text-center py-4 text-muted">
+<td colspan="8" class="text-center py-4 text-muted">
 لا توجد حركات مطابقة للفلتر.
 </td>
 </tr>
@@ -257,6 +258,9 @@ value="{{ request('product') }}" placeholder="اسم الصنف" autocomplete="o
 </td>
 <td class="fw-semibold text-dark">
 {{ $return->supplier?->name ?? '—' }}
+</td>
+<td class="text-secondary small">
+{{ $return->creator?->name ?? '—' }}
 </td>
 <td colspan="3" class="text-warning small">
 <i class="bi bi-inbox ms-1"></i>
@@ -289,6 +293,10 @@ value="{{ request('product') }}" placeholder="اسم الصنف" autocomplete="o
 
 <td class="fw-semibold text-dark">
 {{ $return->supplier?->name ?? '—' }}
+</td>
+
+<td class="text-secondary small">
+{{ $return->creator?->name ?? '—' }}
 </td>
 
 <td>{{ $item->product?->name ?? '—' }}</td>

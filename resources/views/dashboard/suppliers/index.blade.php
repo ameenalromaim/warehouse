@@ -280,6 +280,7 @@
                                         <th class="ps-4">الاسم</th>
                                         <th>الهاتف</th>
                                         <th>العنوان</th>
+                                        <th>أضيف بواسطة</th>
                                         <th class="pe-4 text-center">الاجراءات</th>
                                     </tr>
                                 </thead>
@@ -289,6 +290,7 @@
                                             <td class="ps-4 fw-semibold text-dark">{{ $supplier->name ?? '—' }}</td>
                                             <td>{{ $supplier->phone ?? '—' }}</td>
                                             <td>{{ $supplier->address ?? '—' }}</td>
+                                            <td class="text-secondary small">{{ $supplier->creator?->name ?? '—' }}</td>
                                             <td class="pe-4">
                                                 <div class="d-flex justify-content-center gap-2 actions-cell">
                                                     <button

@@ -197,6 +197,7 @@ class="btn btn-p-accent btn-sm px-3 shadow-sm">
 <th class="ps-4">رقم الفاتورة</th>
 <th>المورد</th>
 <th>التاريخ</th>
+<th>أضيف بواسطة</th>
 <th>الصنف</th>
 <th>الوحدة</th>
 <th>الكمية</th>
@@ -215,6 +216,10 @@ class="btn btn-p-accent btn-sm px-3 shadow-sm">
 
 <th>
 <input type="date" id="filterDate" class="form-control form-control-sm filter-input column-filter">
+</th>
+
+<th>
+<input type="text" id="filterAddedBy" class="form-control form-control-sm filter-input column-filter" placeholder="فلتر">
 </th>
 
 <th>
@@ -257,6 +262,10 @@ class="btn btn-sm btn-outline-danger">
 
 <td class="text-muted small">
 {{ optional($purchase->date)->format('Y-m-d') ?? '—' }}
+</td>
+
+<td class="text-secondary small">
+{{ $purchase->creator?->name ?? '—' }}
 </td>
 
 <td>{{ $item->product?->name ?? '—' }}</td>
@@ -315,6 +324,7 @@ const rows = table.querySelectorAll("tbody tr");
 const supplier = document.getElementById("filterSupplier");
 const invoice  = document.getElementById("filterInvoice");
 const date     = document.getElementById("filterDate");
+const addedBy  = document.getElementById("filterAddedBy");
 const product  = document.getElementById("filterProduct");
 const clearBtn = document.getElementById("clearFilters");
 
@@ -327,12 +337,14 @@ const td = row.querySelectorAll("td");
 const vInvoice  = td[0].innerText.trim().toLowerCase();
 const vSupplier = td[1].innerText.trim().toLowerCase();
 const vDate     = td[2].innerText.trim().toLowerCase();
-const vProduct  = td[3].innerText.trim().toLowerCase();
+const vAddedBy  = td[3].innerText.trim().toLowerCase();
+const vProduct  = td[4].innerText.trim().toLowerCase();
 
 const ok =
 vInvoice.includes(invoice.value.toLowerCase()) &&
 vSupplier.includes(supplier.value.toLowerCase()) &&
 vDate.includes(date.value.toLowerCase()) &&
+vAddedBy.includes(addedBy.value.toLowerCase()) &&
 vProduct.includes(product.value.toLowerCase());
 
 row.style.display = ok ? "" : "none";
@@ -364,6 +376,7 @@ clearBtn.addEventListener("click", function(){
 supplier.value = "";
 invoice.value  = "";
 date.value     = "";
+addedBy.value  = "";
 product.value  = "";
 
 applyFilter();

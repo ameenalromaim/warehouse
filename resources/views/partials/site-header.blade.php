@@ -7,7 +7,7 @@
                     <small class="text-light-emphasis mb-0 d-none d-md-inline">
                         {{ auth()->user()->name }}
                     </small>
-                    <form method="POST" action="{{ url('/logout') }}" class="d-inline">
+                    <form method="POST" action="{{ route('logout') }}" class="d-inline">
                         @csrf
                         <button type="submit" class="btn btn-outline-light btn-sm px-3">
                             <i class="bi bi-box-arrow-right ms-1"></i>

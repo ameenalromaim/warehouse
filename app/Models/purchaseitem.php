@@ -20,6 +20,7 @@ class purchaseitem extends Model
         'quantity',
         'price',
         'type_location',
+        'user_id',
         'updated_by_device',
     ];
 
@@ -45,5 +46,10 @@ class purchaseitem extends Model
     public function unit(): BelongsTo
     {
         return $this->belongsTo(units::class, 'unit_uuid', 'uuid');
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

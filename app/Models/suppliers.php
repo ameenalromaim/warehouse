@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class suppliers extends Model
 {
@@ -18,6 +19,7 @@ class suppliers extends Model
         'address',
         'note',
         'type_location',
+        'user_id',
         'updated_by_device',
     ];
 
@@ -28,5 +30,10 @@ class suppliers extends Model
             'synced_at' => 'datetime',
             'version' => 'integer',
         ];
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

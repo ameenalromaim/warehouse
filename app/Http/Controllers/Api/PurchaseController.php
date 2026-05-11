@@ -41,6 +41,7 @@ class PurchaseController extends Controller
             'supplier',
             'items.product',
             'items.unit',
+            'creator',
         ])
             ->forUserBranch($request->user())
             ->latest()
@@ -96,6 +97,7 @@ class PurchaseController extends Controller
                 'supplier_uuid' => $request->supplier_uuid,
                 'date' => $request->date ?? now(),
                 'type_location' => $loc,
+                'user_id' => $request->user()->id,
             ]);
 
             foreach ($request->items as $item) {
@@ -106,6 +108,7 @@ class PurchaseController extends Controller
                     'quantity' => $item['quantity'],
                     'price' => $item['price'] ?? 0,
                     'type_location' => $loc,
+                    'user_id' => $request->user()->id,
                 ]);
             }
 
@@ -115,6 +118,7 @@ class PurchaseController extends Controller
                     'supplier',
                     'items.product',
                     'items.unit',
+                    'creator',
                 ])),
             ], 201);
         });
@@ -131,6 +135,7 @@ class PurchaseController extends Controller
             'supplier',
             'items.product',
             'items.unit',
+            'creator',
         ]);
 
         return response()->json(ApiPresenter::purchase($purchase));
@@ -195,6 +200,7 @@ class PurchaseController extends Controller
                     'quantity' => $item['quantity'],
                     'price' => $item['price'] ?? 0,
                     'type_location' => $loc,
+                    'user_id' => $request->user()->id,
                 ]);
             }
 
@@ -204,6 +210,7 @@ class PurchaseController extends Controller
                     'supplier',
                     'items.product',
                     'items.unit',
+                    'creator',
                 ])),
             ]);
         });

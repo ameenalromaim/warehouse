@@ -190,6 +190,12 @@
             outline-offset: 2px;
         }
 
+        .login-alert-session {
+            background: rgba(180, 83, 9, 0.25);
+            border: 1px solid rgba(251, 191, 36, 0.35);
+            color: #fde68a;
+        }
+
         .login-alert {
             background: rgba(127, 29, 29, 0.35);
             border: 1px solid rgba(248, 113, 113, 0.4);
@@ -214,6 +220,13 @@
             <h1 class="login-heading">مرحباً بك</h1>
             <p class="login-sub">سجّل بياناتك للوصول إلى لوحة إدارة المخازن</p>
 
+            @if(session('session_expired'))
+                <div class="alert login-alert-session py-2 mb-3" role="alert">
+                    <i class="bi bi-clock-history ms-1"></i>
+                    {{ session('session_expired') }}
+                </div>
+            @endif
+
             <div class="mb-3">
                 <label for="phone" class="form-label">رقم الهاتف</label>
                 <div class="login-field">
@@ -224,12 +237,15 @@
                         name="phone"
                         value="{{ old('phone') }}"
                         class="form-control flex-grow-1"
-                        placeholder="input your phone number"
-                        inputmode="numeric"
-                        autocomplete="username"
+                        placeholder="مثال: 771234567 أو 0771234567"
+                        inputmode="tel"
+                        autocomplete="tel"
                         required
                     >
                 </div>
+                <small class="text-secondary d-block mt-1">
+                    أدخل الرقم كما هو مسجّل لديك (يدعم 967، 966، 07، أو الأرقام العربية ٠١٢…).
+                </small>
             </div>
 
             <div class="mb-3">
@@ -245,6 +261,11 @@
                         required
                     >
                 </div>
+            </div>
+
+            <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" id="remember" name="remember" value="1">
+                <label class="form-check-label small" for="remember" style="color: #94a3b8;">تذكّرني على هذا الجهاز</label>
             </div>
 
             @error('phone')

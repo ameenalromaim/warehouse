@@ -280,6 +280,7 @@
                                         <th class="ps-4">الاسم</th>
                                         <th>الكود</th>
                                         <th>الوحدة</th>
+                                        <th>أضيف بواسطة</th>
                                         <th class="pe-4 text-center">الاجراءات</th>
                                     </tr>
                                 </thead>
@@ -289,6 +290,7 @@
                                             <td class="ps-4 fw-semibold text-dark">{{ $item->name ?? '—' }}</td>
                                             <td>{{ $item->code ?? '—' }}</td>
                                             <td>{{ $item->unit?->name ?? '—' }}</td>
+                                            <td class="text-secondary small">{{ $item->creator?->name ?? '—' }}</td>
                                             <td class="pe-4">
                                                 <div class="d-flex justify-content-center gap-2 actions-cell">
                                                     <button

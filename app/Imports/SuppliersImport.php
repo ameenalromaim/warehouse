@@ -9,13 +9,22 @@ class SuppliersImport implements ToModel, WithHeadingRow
 {
     public function model(array $row)
     {
-        return suppliers::updateOrCreate(
-            ['name' => $row['name']], // مفتاح منع التكرار
-            [
-                'phone'   => $row['phone'] ?? null,
-                'address' => $row['address'] ?? null,
-                'note'    => $row['note'] ?? null,
-            ]
+        $supplier = suppliers::firstOrNew(
+            ['name' => $row['name']],
         );
+
+        $supplier->fill([
+            'phone' => $row['phone'] ?? null,
+            'address' => $row['address'] ?? null,
+            'note' => $row['note'] ?? null,
+        ]);
+
+        if (! $supplier->exists && auth()->check()) {
+            $supplier->user_id = auth()->id();
+        }
+
+        $supplier->save();
+
+        return $supplier;
     }
 }

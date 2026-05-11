@@ -12,6 +12,7 @@ class SupplierDashboardController extends Controller
     public function index()
     {
         $suppliers = suppliers::query()
+            ->with('creator')
             ->forUserBranch(auth()->user())
             ->latest()
             ->paginate(10);

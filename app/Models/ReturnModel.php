@@ -20,6 +20,7 @@ class ReturnModel extends Model
         'supplier_uuid',
         'note',
         'type_location',
+        'user_id',
         'updated_by_device',
     ];
 
@@ -41,5 +42,10 @@ class ReturnModel extends Model
     public function items(): HasMany
     {
         return $this->hasMany(ReturnItem::class, 'return_uuid', 'uuid');
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }
