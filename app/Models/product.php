@@ -7,21 +7,21 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class product extends Model
 {
-    use Concerns\HasUuidColumn;
+    // use Concerns\HasUuidColumn;
     use Concerns\ScopedByBranch;
     use Concerns\Syncable;
 
     protected $table = 'product';
 
-    protected $fillable = [
-        'name',
-        'code',
-        'description',
-        'unit_uuid',
-        'type_location',
-        'user_id',
-        'updated_by_device',
-    ];
+   protected $fillable = [
+    'uuid',
+    'name',
+    'code',
+    'description',
+    'unit_uuid',
+    'type_location',
+    'user_id',
+    'updated_by_device',];
 
     protected function casts(): array
     {

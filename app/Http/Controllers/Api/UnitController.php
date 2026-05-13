@@ -25,24 +25,26 @@ class UnitController extends Controller
     /**
      * إضافة وحدة جديدة
      */
-    public function store(Request $request)
-    {
-        $this->authorizeSuperAdmin($request);
+ public function store(Request $request)
+{
+    $this->authorizeSuperAdmin($request);
 
-        $data = $request->validate([
-            'name' => 'required|string|max:255|unique:units,name',
-        ]);
+    $data = $request->validate([
+        'uuid' => 'required|uuid|unique:units,uuid',
+        'name' => 'required|string|max:255|unique:units,name',
+    ]);
 
-        $unit = units::create([
-            'name' => trim($data['name']),
-            'user_id' => $request->user()->id,
-        ]);
+    $unit = units::create([
+        'uuid' => $data['uuid'],
+        'name' => trim($data['name']),
+        'user_id' => $request->user()->id,
+    ]);
 
-        return response()->json([
-            'message' => 'تم إنشاء الوحدة بنجاح',
-            'data' => ApiPresenter::unit($unit->load('creator')),
-        ], 201);
-    }
+    return response()->json([
+        'message' => 'تم إنشاء الوحدة بنجاح',
+        'data' => ApiPresenter::unit($unit->load('creator')),
+    ], 201);
+}
 
     /**
      * عرض وحدة واحدة

@@ -52,6 +52,12 @@
 
         .sidebar {
             width: 260px;
+            flex-shrink: 0;
+            position: sticky;
+            top: 72px;
+            align-self: flex-start;
+            max-height: calc(100vh - 72px);
+            overflow-y: auto;
             background: rgba(15, 23, 42, 0.95);
             border-inline-start: 1px solid rgba(148, 163, 184, 0.2);
             padding: 1.5rem 1rem;
@@ -142,6 +148,7 @@
     font-size:13px;
 }
 </style>
+@include('partials.dashboard-responsive-styles')
 </head>
 
 <body>

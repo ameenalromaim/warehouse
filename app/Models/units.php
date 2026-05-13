@@ -7,15 +7,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class units extends Model
 {
-    use Concerns\HasUuidColumn;
+    // use Concerns\HasUuidColumn;
     use Concerns\Syncable;
 
     protected $table = 'units';
 
-    protected $fillable = [
-        'name',
-        'user_id',
-        'updated_by_device',
+   protected $fillable = [
+    'uuid',
+    'name',
+    'user_id',
+    'updated_by_device',
     ];
 
     protected function casts(): array

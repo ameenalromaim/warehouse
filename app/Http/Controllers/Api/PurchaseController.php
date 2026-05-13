@@ -17,8 +17,6 @@ class PurchaseController extends Controller
 {
     /**
      * توليد رقم فاتورة تلقائي
-     * مثال:
-     * INV-20260502-00001
      */
     private function generateInvoiceNumber(): string
     {
@@ -58,27 +56,38 @@ class PurchaseController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'uuid' => 'required|uuid|unique:purchases,uuid',
             'supplier_uuid' => 'required|uuid|exists:suppliers,uuid',
             'date' => 'nullable|date',
             'type_location' => 'nullable|string|max:255',
 
             'items' => 'required|array|min:1',
+
+            'items.*.uuid' => 'required|uuid|distinct',
             'items.*.product_uuid' => 'required|uuid|exists:product,uuid',
             'items.*.unit_uuid' => 'required|uuid|exists:units,uuid',
             'items.*.quantity' => 'required|numeric|min:1',
+            'items.*.price' => 'nullable|numeric|min:0',
         ]);
 
         $this->assertBranchUserHasBranch($request);
 
         $loc = BranchData::locationForWrite($request);
 
-        if (! suppliers::query()->forUserBranch($request->user())->where('uuid', $request->supplier_uuid)->exists()) {
+        if (! suppliers::query()
+            ->forUserBranch($request->user())
+            ->where('uuid', $request->supplier_uuid)
+            ->exists()) {
             throw ValidationException::withMessages([
                 'supplier_uuid' => [__('المورد غير متاح لهذا الفرع.')],
             ]);
         }
 
-        $productUuids = collect($request->items)->pluck('product_uuid')->unique()->values();
+        $productUuids = collect($request->items)
+            ->pluck('product_uuid')
+            ->unique()
+            ->values();
+
         $countOk = product::query()
             ->forUserBranch($request->user())
             ->whereIn('uuid', $productUuids)
@@ -93,6 +102,7 @@ class PurchaseController extends Controller
         return DB::transaction(function () use ($request, $loc) {
 
             $purchase = Purchase::create([
+                'uuid' => $request->uuid,
                 'invoice_number' => $this->generateInvoiceNumber(),
                 'supplier_uuid' => $request->supplier_uuid,
                 'date' => $request->date ?? now(),
@@ -102,9 +112,10 @@ class PurchaseController extends Controller
 
             foreach ($request->items as $item) {
                 purchaseitem::create([
-                    'purchase_uuid' => $purchase->uuid,
+                    'uuid' => $item['uuid'],
+                    'purchase_uuid' => $request->uuid,
                     'product_uuid' => $item['product_uuid'],
-                    'unit_uuid' => $item['unit_uuid'] ?? null,
+                    'unit_uuid' => $item['unit_uuid'],
                     'quantity' => $item['quantity'],
                     'price' => $item['price'] ?? 0,
                     'type_location' => $loc,
@@ -154,6 +165,8 @@ class PurchaseController extends Controller
             'type_location' => 'nullable|string|max:255',
 
             'items' => 'required|array|min:1',
+
+            'items.*.uuid' => 'required|uuid|distinct',
             'items.*.product_uuid' => 'required|uuid|exists:product,uuid',
             'items.*.unit_uuid' => 'required|uuid|exists:units,uuid',
             'items.*.quantity' => 'required|numeric|min:1',
@@ -164,13 +177,20 @@ class PurchaseController extends Controller
 
         $loc = BranchData::locationForWrite($request);
 
-        if (! suppliers::query()->forUserBranch($request->user())->where('uuid', $request->supplier_uuid)->exists()) {
+        if (! suppliers::query()
+            ->forUserBranch($request->user())
+            ->where('uuid', $request->supplier_uuid)
+            ->exists()) {
             throw ValidationException::withMessages([
                 'supplier_uuid' => [__('المورد غير متاح لهذا الفرع.')],
             ]);
         }
 
-        $productUuids = collect($request->items)->pluck('product_uuid')->unique()->values();
+        $productUuids = collect($request->items)
+            ->pluck('product_uuid')
+            ->unique()
+            ->values();
+
         $countOk = product::query()
             ->forUserBranch($request->user())
             ->whereIn('uuid', $productUuids)
@@ -194,9 +214,10 @@ class PurchaseController extends Controller
 
             foreach ($request->items as $item) {
                 purchaseitem::create([
+                    'uuid' => $item['uuid'],
                     'purchase_uuid' => $purchase->uuid,
                     'product_uuid' => $item['product_uuid'],
-                    'unit_uuid' => $item['unit_uuid'] ?? null,
+                    'unit_uuid' => $item['unit_uuid'],
                     'quantity' => $item['quantity'],
                     'price' => $item['price'] ?? 0,
                     'type_location' => $loc,

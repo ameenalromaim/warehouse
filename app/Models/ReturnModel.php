@@ -5,16 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class ReturnModel extends Model
 {
-    use Concerns\HasUuidColumn;
+    // use Concerns\HasUuidColumn;
     use Concerns\ScopedByBranch;
     use Concerns\Syncable;
 
     protected $table = 'returns';
 
     protected $fillable = [
+        'uuid', // مهم جداً
         'date',
         'type',
         'supplier_uuid',
@@ -33,6 +35,19 @@ class ReturnModel extends Model
             'version' => 'integer',
         ];
     }
+
+    /**
+     * استخدم UUID القادم من Flutter
+     * وإذا لم يوجد أنشئ UUID جديد
+     */
+    // protected static function booted()
+    // {
+    //     static::creating(function ($model) {
+    //         if (empty($model->uuid)) {
+    //             $model->uuid = (string) Str::uuid();
+    //         }
+    //     });
+    // }
 
     public function supplier(): BelongsTo
     {

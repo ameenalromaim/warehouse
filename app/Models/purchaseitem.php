@@ -4,16 +4,18 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 
 class purchaseitem extends Model
 {
-    use Concerns\HasUuidColumn;
+    // use Concerns\HasUuidColumn;
     use Concerns\ScopedByBranch;
     use Concerns\Syncable;
 
     protected $table = 'purchaseitem';
 
     protected $fillable = [
+        'uuid', // مهم جداً
         'purchase_uuid',
         'product_uuid',
         'unit_uuid',
@@ -32,6 +34,19 @@ class purchaseitem extends Model
             'version' => 'integer',
         ];
     }
+
+    /**
+     * استخدم UUID القادم من Flutter
+     * وإذا غير موجود أنشئ واحد
+     */
+    // protected static function booted()
+    // {
+    //     static::creating(function ($model) {
+    //         if (empty($model->uuid)) {
+    //             $model->uuid = (string) Str::uuid();
+    //         }
+    //     });
+    // }
 
     public function purchase(): BelongsTo
     {

@@ -8,13 +8,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Purchase extends Model
 {
-    use Concerns\HasUuidColumn;
+    // use Concerns\HasUuidColumn;
     use Concerns\ScopedByBranch;
     use Concerns\Syncable;
 
     protected $table = 'purchase';
 
     protected $fillable = [
+        'uuid', // مهم جداً
         'supplier_uuid',
         'date',
         'invoice_number',
@@ -32,6 +33,19 @@ class Purchase extends Model
             'version' => 'integer',
         ];
     }
+
+    /**
+     * إذا جاء UUID من Flutter استخدمه
+     * إذا لم يأتِ، أنشئ UUID جديد
+     */
+    // protected static function booted()
+    // {
+    //     static::creating(function ($model) {
+    //         if (empty($model->uuid)) {
+    //             $model->uuid = (string) \Illuminate\Support\Str::uuid();
+    //         }
+    //     });
+    // }
 
     public function supplier(): BelongsTo
     {

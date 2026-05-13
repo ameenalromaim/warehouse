@@ -11,6 +11,7 @@ use App\Models\suppliers;
 use App\Support\BranchData;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class ReturnController extends Controller
@@ -24,24 +25,28 @@ class ReturnController extends Controller
         if ($request->type) {
             $q->where('type', $request->type);
         }
+
         if ($request->filled('supplier')) {
             $s = $request->supplier;
             $q->whereHas('supplier', function ($x) use ($s) {
                 $x->where('name', 'like', '%'.$s.'%');
             });
         }
+
         if ($request->filled('product')) {
             $p = $request->product;
             $q->whereHas('items.product', function ($x) use ($p) {
                 $x->where('name', 'like', '%'.$p.'%');
             });
         }
+
         if ($request->filled('date')) {
             $q->whereDate('date', $request->date);
         } else {
             if ($request->from) {
                 $q->whereDate('date', '>=', $request->from);
             }
+
             if ($request->to) {
                 $q->whereDate('date', '<=', $request->to);
             }
@@ -55,6 +60,7 @@ class ReturnController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'uuid' => 'nullable|uuid',
             'date' => 'required|date',
             'type' => 'required|in:normal,damage',
             'supplier_uuid' => 'nullable|uuid|exists:suppliers,uuid',
@@ -62,6 +68,7 @@ class ReturnController extends Controller
             'type_location' => 'nullable|string|max:255',
 
             'items' => 'required|array|min:1',
+            'items.*.uuid' => 'nullable|uuid',
             'items.*.product_uuid' => 'required|uuid|exists:product,uuid',
             'items.*.unit_uuid' => 'required|uuid|exists:units,uuid',
             'items.*.quantity' => 'required|numeric|min:0.01',
@@ -71,14 +78,20 @@ class ReturnController extends Controller
 
         $loc = BranchData::locationForWrite($request);
 
-        if ($request->filled('supplier_uuid')
-            && ! suppliers::query()->forUserBranch($request->user())->where('uuid', $request->supplier_uuid)->exists()) {
+        if (
+            $request->filled('supplier_uuid') &&
+            !suppliers::query()
+                ->forUserBranch($request->user())
+                ->where('uuid', $request->supplier_uuid)
+                ->exists()
+        ) {
             throw ValidationException::withMessages([
                 'supplier_uuid' => [__('المورد غير متاح لهذا الفرع.')],
             ]);
         }
 
         $productUuids = collect($request->items)->pluck('product_uuid')->unique()->values();
+
         $countOk = product::query()
             ->forUserBranch($request->user())
             ->whereIn('uuid', $productUuids)
@@ -93,6 +106,7 @@ class ReturnController extends Controller
         return DB::transaction(function () use ($request, $loc) {
 
             $return = ReturnModel::create([
+                'uuid' => $request->uuid ?? (string) Str::uuid(),
                 'date' => $request->date,
                 'type' => $request->type,
                 'supplier_uuid' => $request->supplier_uuid,
@@ -102,8 +116,10 @@ class ReturnController extends Controller
             ]);
 
             $itemsPayload = [];
+
             foreach ($request->items as $item) {
                 $itemsPayload[] = new ReturnItem([
+                    'uuid' => $item['uuid'] ?? (string) Str::uuid(),
                     'product_uuid' => $item['product_uuid'],
                     'unit_uuid' => $item['unit_uuid'],
                     'quantity' => $item['quantity'],
@@ -116,7 +132,9 @@ class ReturnController extends Controller
 
             return response()->json([
                 'message' => 'تم حفظ المردود',
-                'data' => ApiPresenter::warehouseReturn($return->load('items.product', 'items.unit', 'supplier', 'creator')),
+                'data' => ApiPresenter::warehouseReturn(
+                    $return->load('items.product', 'items.unit', 'supplier', 'creator')
+                ),
             ], 201);
         });
     }
@@ -125,9 +143,16 @@ class ReturnController extends Controller
     {
         $this->authorizeBranchRecord($warehouse_return);
 
-        $warehouse_return->load(['items.product', 'items.unit', 'supplier', 'creator']);
+        $warehouse_return->load([
+            'items.product',
+            'items.unit',
+            'supplier',
+            'creator',
+        ]);
 
-        return response()->json(ApiPresenter::warehouseReturn($warehouse_return));
+        return response()->json(
+            ApiPresenter::warehouseReturn($warehouse_return)
+        );
     }
 
     public function destroy(Request $request, ReturnModel $warehouse_return)
@@ -151,7 +176,9 @@ class ReturnController extends Controller
             'supplier_uuid' => 'nullable|uuid|exists:suppliers,uuid',
             'note' => 'nullable|string',
             'type_location' => 'nullable|string|max:255',
+
             'items' => 'required|array|min:1',
+            'items.*.uuid' => 'nullable|uuid',
             'items.*.product_uuid' => 'required|uuid|exists:product,uuid',
             'items.*.unit_uuid' => 'required|uuid|exists:units,uuid',
             'items.*.quantity' => 'required|numeric|min:0.01',
@@ -161,14 +188,20 @@ class ReturnController extends Controller
 
         $loc = BranchData::locationForWrite($request);
 
-        if ($request->filled('supplier_uuid')
-            && ! suppliers::query()->forUserBranch($request->user())->where('uuid', $request->supplier_uuid)->exists()) {
+        if (
+            $request->filled('supplier_uuid') &&
+            !suppliers::query()
+                ->forUserBranch($request->user())
+                ->where('uuid', $request->supplier_uuid)
+                ->exists()
+        ) {
             throw ValidationException::withMessages([
                 'supplier_uuid' => [__('المورد غير متاح لهذا الفرع.')],
             ]);
         }
 
         $productUuids = collect($request->items)->pluck('product_uuid')->unique()->values();
+
         $countOk = product::query()
             ->forUserBranch($request->user())
             ->whereIn('uuid', $productUuids)
@@ -193,8 +226,10 @@ class ReturnController extends Controller
             $warehouse_return->items()->delete();
 
             $itemsPayload = [];
+
             foreach ($request->items as $item) {
                 $itemsPayload[] = new ReturnItem([
+                    'uuid' => $item['uuid'] ?? (string) Str::uuid(),
                     'product_uuid' => $item['product_uuid'],
                     'unit_uuid' => $item['unit_uuid'],
                     'quantity' => $item['quantity'],
@@ -207,7 +242,14 @@ class ReturnController extends Controller
 
             return response()->json([
                 'message' => 'تم التحديث',
-                'data' => ApiPresenter::warehouseReturn($warehouse_return->load('items.product', 'items.unit', 'supplier', 'creator')),
+                'data' => ApiPresenter::warehouseReturn(
+                    $warehouse_return->load(
+                        'items.product',
+                        'items.unit',
+                        'supplier',
+                        'creator'
+                    )
+                ),
             ]);
         });
     }
@@ -216,7 +258,11 @@ class ReturnController extends Controller
     {
         $user = $request->user();
 
-        if ($user && $user->isBranchUser() && $user->branchScopeKey() === null) {
+        if (
+            $user &&
+            $user->isBranchUser() &&
+            $user->branchScopeKey() === null
+        ) {
             throw ValidationException::withMessages([
                 'type_location' => [__('لم يُعرَّف فرع لهذا المستخدم.')],
             ]);

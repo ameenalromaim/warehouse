@@ -7,6 +7,7 @@ use App\Http\Support\ApiPresenter;
 use App\Models\suppliers;
 use App\Support\BranchData;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class SupplierController extends Controller
@@ -31,6 +32,7 @@ class SupplierController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'uuid' => 'nullable|uuid',
             'name' => 'required|string|max:255',
             'phone' => 'nullable|string',
             'address' => 'nullable|string',
@@ -45,6 +47,7 @@ class SupplierController extends Controller
         $supplier = suppliers::create(array_merge(
             $request->only('name', 'phone', 'address', 'note'),
             [
+                'uuid' => $request->uuid ?? (string) Str::uuid(),
                 'type_location' => $loc,
                 'user_id' => $request->user()->id,
             ]
@@ -60,7 +63,9 @@ class SupplierController extends Controller
     {
         $this->authorizeBranchRecord($supplier);
 
-        return response()->json(ApiPresenter::supplier($supplier->load('creator')));
+        return response()->json(
+            ApiPresenter::supplier($supplier->load('creator'))
+        );
     }
 
     public function update(Request $request, suppliers $supplier)
@@ -81,12 +86,16 @@ class SupplierController extends Controller
 
         $supplier->update(array_merge(
             $request->only('name', 'phone', 'address', 'note'),
-            ['type_location' => $loc]
+            [
+                'type_location' => $loc,
+            ]
         ));
 
         return response()->json([
             'message' => 'تم التحديث',
-            'data' => ApiPresenter::supplier($supplier->fresh()->load('creator')),
+            'data' => ApiPresenter::supplier(
+                $supplier->fresh()->load('creator')
+            ),
         ]);
     }
 
@@ -105,7 +114,11 @@ class SupplierController extends Controller
     {
         $user = $request->user();
 
-        if ($user && $user->isBranchUser() && $user->branchScopeKey() === null) {
+        if (
+            $user &&
+            $user->isBranchUser() &&
+            $user->branchScopeKey() === null
+        ) {
             throw ValidationException::withMessages([
                 'type_location' => [__('لم يُعرَّف فرع لهذا المستخدم.')],
             ]);

@@ -7,13 +7,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class suppliers extends Model
 {
-    use Concerns\HasUuidColumn;
+    // use Concerns\HasUuidColumn;
     use Concerns\ScopedByBranch;
     use Concerns\Syncable;
 
     protected $table = 'suppliers';
 
     protected $fillable = [
+        'uuid',
         'name',
         'phone',
         'address',

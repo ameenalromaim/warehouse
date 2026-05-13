@@ -50,6 +50,12 @@
 
         .sidebar {
             width: 260px;
+            flex-shrink: 0;
+            position: sticky;
+            top: 72px;
+            align-self: flex-start;
+            max-height: calc(100vh - 72px);
+            overflow-y: auto;
             background: rgba(15, 23, 42, 0.95);
             border-inline-start: 1px solid rgba(148, 163, 184, 0.2);
             padding: 1.5rem 1rem;
@@ -133,6 +139,34 @@
 
         .actions-cell .btn {
             min-width: 88px;
+        }
+
+        .password-field-wrap .password-toggle-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            inset-inline-end: 0.35rem;
+            z-index: 4;
+            width: 2.25rem;
+            height: 2.25rem;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            border-radius: 0.375rem;
+        }
+
+        .password-field-wrap .password-toggle-btn:hover,
+        .password-field-wrap .password-toggle-btn:focus-visible {
+            color: #0f172a;
+            background: rgba(15, 23, 42, 0.06);
+        }
+
+        .password-field-wrap .password-toggle-btn:focus {
+            outline: none;
         }
 
         .delete-user-modal .modal-content {
@@ -226,6 +260,7 @@
             color: #fff;
         }
     </style>
+    @include('partials.dashboard-responsive-styles')
 </head>
 <body>
     @include('partials.site-header')
@@ -414,12 +449,27 @@
                         </div>
                         <div class="mb-3">
                             <label for="user-password" class="form-label">كلمة المرور الجديدة</label>
-                            <input id="user-password" type="password" name="password" class="form-control" placeholder="اتركها فارغة إن لم تتغير" autocomplete="new-password">
-                            <small class="text-muted">إن أدخلت كلمة مرور يجب تأكيدها في الحقل التالي.</small>
+                            <div class="position-relative password-field-wrap">
+                                <input id="user-password" type="password" name="password" class="form-control pe-5" placeholder="اتركها فارغة إن لم تتغير" autocomplete="new-password">
+                                <button type="button" class="password-toggle-btn" data-password-target="user-password" aria-label="إظهار كلمة المرور" title="إظهار / إخفاء">
+                                    <i class="bi bi-eye" data-icon-show aria-hidden="true"></i>
+                                    <i class="bi bi-eye-slash d-none" data-icon-hide aria-hidden="true"></i>
+                                </button>
+                            </div>
+                            {{-- <small class="text-muted d-block">
+                                لا يمكن عرض كلمة المرور الحالية في الحقل لأنها محفوظة مشفّرة في النظام وليست قابلة للاسترجاع.
+                                اترك الحقلين أدناه فارغين للإبقاء على كلمة المرور كما هي، أو أدخل كلمة مرور جديدة مع التأكيد.
+                            </small> --}}
                         </div>
                         <div>
                             <label for="user-password-confirmation" class="form-label">تأكيد كلمة المرور</label>
-                            <input id="user-password-confirmation" type="password" name="password_confirmation" class="form-control" autocomplete="new-password">
+                            <div class="position-relative password-field-wrap">
+                                <input id="user-password-confirmation" type="password" name="password_confirmation" class="form-control pe-5" autocomplete="new-password">
+                                <button type="button" class="password-toggle-btn" data-password-target="user-password-confirmation" aria-label="إظهار كلمة المرور" title="إظهار / إخفاء">
+                                    <i class="bi bi-eye" data-icon-show aria-hidden="true"></i>
+                                    <i class="bi bi-eye-slash d-none" data-icon-hide aria-hidden="true"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -433,6 +483,37 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        function setPasswordToggleState(button, visible) {
+            const targetId = button.getAttribute('data-password-target');
+            const input = targetId ? document.getElementById(targetId) : null;
+            const showIcon = button.querySelector('[data-icon-show]');
+            const hideIcon = button.querySelector('[data-icon-hide]');
+            if (!input || !showIcon || !hideIcon) {
+                return;
+            }
+            input.type = visible ? 'text' : 'password';
+            showIcon.classList.toggle('d-none', visible);
+            hideIcon.classList.toggle('d-none', !visible);
+            button.setAttribute('aria-label', visible ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور');
+        }
+
+        function resetEditUserPasswordToggles() {
+            document.querySelectorAll('#editUserModal .password-toggle-btn').forEach((btn) => {
+                setPasswordToggleState(btn, false);
+            });
+        }
+
+        document.querySelectorAll('#editUserModal .password-toggle-btn').forEach((btn) => {
+            btn.addEventListener('click', function () {
+                const targetId = btn.getAttribute('data-password-target');
+                const input = targetId ? document.getElementById(targetId) : null;
+                if (!input) {
+                    return;
+                }
+                setPasswordToggleState(btn, input.type === 'password');
+            });
+        });
+
         const editUserModal = document.getElementById('editUserModal');
         if (editUserModal) {
             editUserModal.addEventListener('show.bs.modal', function (event) {
@@ -471,6 +552,7 @@
 
                 document.getElementById('user-password').value = '';
                 document.getElementById('user-password-confirmation').value = '';
+                resetEditUserPasswordToggles();
 
                 syncEditBranchVisibility();
             });

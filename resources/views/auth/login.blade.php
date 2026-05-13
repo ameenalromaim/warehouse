@@ -203,6 +203,30 @@
             font-size: 0.9rem;
             border-radius: 0.5rem;
         }
+
+        @media (max-width: 575.98px) {
+            .login-wrap {
+                padding: 5rem 0.75rem 1.25rem;
+            }
+
+            .login-card {
+                padding: 1.5rem 1rem 1.35rem;
+            }
+
+            .login-heading {
+                font-size: 1.25rem;
+            }
+
+            .site-main-title {
+                font-size: 1rem;
+            }
+
+            .login-icon-wrap {
+                width: 56px;
+                height: 56px;
+                font-size: 1.5rem;
+            }
+        }
     </style>
 </head>
 

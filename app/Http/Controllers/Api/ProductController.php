@@ -21,6 +21,7 @@ class ProductController extends Controller
         $this->requireBranchWhenNeeded($request);
 
         $validated = $request->validate([
+            'uuid' => 'required|uuid|unique:product,uuid',
             'name' => 'required|string|max:255',
             'code' => 'nullable|string|max:255|unique:product,code',
             'description' => 'nullable|string',
@@ -50,6 +51,7 @@ class ProductController extends Controller
         }
 
         $row = product::create([
+            'uuid' => $validated['uuid'],
             'name' => $validated['name'],
             'code' => $code,
             'description' => $validated['description'] ?? null,
