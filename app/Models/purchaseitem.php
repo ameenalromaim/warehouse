@@ -20,6 +20,7 @@ class purchaseitem extends Model
         'product_uuid',
         'unit_uuid',
         'quantity',
+        'note',
         'price',
         'type_location',
         'user_id',

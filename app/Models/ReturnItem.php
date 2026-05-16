@@ -20,6 +20,7 @@ class ReturnItem extends Model
         'product_uuid',
         'unit_uuid',
         'quantity',
+        'note',
         'type_location',
         'user_id',
         'updated_by_device',

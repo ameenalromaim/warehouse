@@ -71,7 +71,7 @@ class ReturnController extends Controller
             'items.*.uuid' => 'nullable|uuid',
             'items.*.product_uuid' => 'required|uuid|exists:product,uuid',
             'items.*.unit_uuid' => 'required|uuid|exists:units,uuid',
-            'items.*.quantity' => 'required|numeric|min:0.01',
+            'items.*.quantity' => 'required|integer|min:1',
         ]);
 
         $this->assertBranchUserHasBranch($request);
@@ -123,6 +123,7 @@ class ReturnController extends Controller
                     'product_uuid' => $item['product_uuid'],
                     'unit_uuid' => $item['unit_uuid'],
                     'quantity' => $item['quantity'],
+                    'note' => $item['note'] ?? null,
                     'type_location' => $loc,
                     'user_id' => $request->user()->id,
                 ]);

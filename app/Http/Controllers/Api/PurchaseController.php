@@ -56,7 +56,7 @@ class PurchaseController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'uuid' => 'required|uuid|unique:purchases,uuid',
+            'uuid' => 'required|uuid|unique:purchase,uuid',
             'supplier_uuid' => 'required|uuid|exists:suppliers,uuid',
             'date' => 'nullable|date',
             'type_location' => 'nullable|string|max:255',
@@ -120,6 +120,7 @@ class PurchaseController extends Controller
                     'price' => $item['price'] ?? 0,
                     'type_location' => $loc,
                     'user_id' => $request->user()->id,
+                    'note' => $item['note'] ?? null,
                 ]);
             }
 
@@ -222,6 +223,7 @@ class PurchaseController extends Controller
                     'price' => $item['price'] ?? 0,
                     'type_location' => $loc,
                     'user_id' => $request->user()->id,
+                    'note' => $item['note'] ?? null,
                 ]);
             }
 
