@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\PhoneNormalizer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -64,7 +65,12 @@ class UserDashboardController extends Controller
 
         $validated = $request->validate($rules, $this->userValidationMessages());
 
-        $phone = trim($validated['phone']);
+        $phone = PhoneNormalizer::normalize($validated['phone']);
+        if ($phone === '') {
+            return back()
+                ->withErrors(['phone' => 'أدخل رقم هاتف صالحاً.'])
+                ->withInput();
+        }
 
         User::create([
             'name' => trim($validated['name']),
@@ -100,7 +106,12 @@ class UserDashboardController extends Controller
 
         $validated = $request->validate($rules, $this->userValidationMessages());
 
-        $phone = trim($validated['phone']);
+        $phone = PhoneNormalizer::normalize($validated['phone']);
+        if ($phone === '') {
+            return back()
+                ->withErrors(['phone' => 'أدخل رقم هاتف صالحاً.'])
+                ->withInput();
+        }
 
         $data = [
             'name' => trim($validated['name']),
