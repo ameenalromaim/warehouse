@@ -14,7 +14,7 @@ class ProductDashboardController extends Controller
     public function index()
     {
         $products = product::with(['unit', 'creator'])
-            ->forUserBranch(auth()->user())
+            // ->forUserBranch(auth()->user())
             ->latest()
             ->paginate(10);
         $units = units::orderBy('name')->get();

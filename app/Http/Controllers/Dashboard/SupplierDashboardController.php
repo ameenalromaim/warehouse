@@ -13,7 +13,7 @@ class SupplierDashboardController extends Controller
     {
         $suppliers = suppliers::query()
             ->with('creator')
-            ->forUserBranch(auth()->user())
+            // ->forUserBranch(auth()->user())
             ->latest()
             ->paginate(10);
 

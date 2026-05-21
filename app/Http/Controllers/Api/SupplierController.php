@@ -15,14 +15,14 @@ class SupplierController extends Controller
     public function index(Request $request)
     {
         $query = suppliers::query()
-            ->with('creator')
-            ->forUserBranch($request->user());
+            ->with('creator');
+            // ->forUserBranch($request->user());
 
         if ($request->search) {
             $query->where('name', 'like', '%'.$request->search.'%');
         }
 
-        $suppliers = $query->latest()->paginate(10);
+        $suppliers = $query->latest()->paginate(500);
 
         return response()->json(
             $suppliers->through(fn ($s) => ApiPresenter::supplier($s))

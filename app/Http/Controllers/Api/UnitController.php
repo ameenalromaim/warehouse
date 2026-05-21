@@ -95,4 +95,13 @@ class UnitController extends Controller
             abort(403, __('تعديل الوحدات متاح لسوبر الأدمن فقط.'));
         }
     }
+//     private function authorizeSuperAdmin(Request $request): void
+// {
+//     if (
+//         ! $request->user()?->isSuperAdmin() &&
+//         ! $request->user()?->isBranchUser()
+//     ) {
+//         abort(403, __('غير مصرح لك.'));
+//     }
+// }
 }

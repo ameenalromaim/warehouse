@@ -316,7 +316,7 @@ value="{{ request('product') }}" placeholder="اسم الصنف" autocomplete="o
 
 <td>
 <span class="fw-semibold">
-{{ number_format((float) $item->quantity, 2, '.', '') }}
+{{ number_format((float) $item->quantity) }}
 </span>
 </td>
 

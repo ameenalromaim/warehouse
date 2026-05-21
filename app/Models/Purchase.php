@@ -22,6 +22,7 @@ class Purchase extends Model
         'type_location',
         'user_id',
         'updated_by_device',
+        'note',
     ];
 
     protected function casts(): array

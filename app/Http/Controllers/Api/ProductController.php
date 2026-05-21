@@ -73,7 +73,7 @@ class ProductController extends Controller
     {
         $rows = product::query()
             ->with(['unit', 'creator'])
-            ->forUserBranch($request->user())
+            // ->forUserBranch($request->user())
             ->latest()
             ->get();
 
