@@ -208,6 +208,7 @@ class="btn btn-p-accent btn-sm px-3 shadow-sm">
 <th>الصنف</th>
 <th>الوحدة</th>
 <th>الكمية</th>
+<th>الملاحظات</th>
 <th class="pe-4 text-center">الاجراءات</th>
 </tr>
 
@@ -235,7 +236,7 @@ class="btn btn-p-accent btn-sm px-3 shadow-sm">
 
 <th></th>
 <th></th>
-
+<th></th>
 <th class="text-center">
 
 <button id="clearFilters"
@@ -289,13 +290,19 @@ class="btn btn-sm btn-outline-danger">
 </span>
 </td>
 
+<td>
+<span class="badge text-bg-light border text-secondary">
+{{ $item->note ?? '—' }}
+</span>
+</td>
+
 <td class="pe-4 text-center">
 <div class="actions-cell">
 
 <a href="{{ route('dashboard.purchases.export-item',$item) }}"
 class="btn btn-sm btn-outline-primary">
 <i class="bi bi-file-earmark-arrow-down ms-1"></i>
-تصدير الفاتورة
+تصدير 
 </a>
 
 </div>

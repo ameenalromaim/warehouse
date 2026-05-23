@@ -156,6 +156,7 @@ final class ApiPresenter
             'product_uuid' => $i->product_uuid,
             'unit_uuid' => $i->unit_uuid,
             'quantity' => $i->quantity,
+            'note' => $i->note,
             'type_location' => $i->type_location,
             'user_id' => $i->user_id,
             'product' => $i->product ? self::product($i->product) : null,

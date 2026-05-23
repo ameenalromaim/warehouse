@@ -4,6 +4,7 @@ namespace App\Imports;
 
 use App\Models\product;
 use App\Models\units;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Imports\HeadingRowFormatter;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -12,60 +13,152 @@ class ProductsImport implements ToModel, WithHeadingRow
 {
     public function __construct()
     {
-        // حافظ على أسماء الأعمدة كما هي (خصوصاً العربية) بدل تحويلها لـ slug.
+        // الحفاظ على أسماء الأعمدة كما هي
         HeadingRowFormatter::default('none');
     }
 
-    public function model(array $row)
-    {
-        $normalizedRow = $this->normalizeRowKeys($row);
+public function model(array $row)
+{
+    $normalizedRow = $this->normalizeRowKeys($row);
 
-        $productName = $this->getValue($normalizedRow, ['name', 'product_name', 'product', 'اسم الصنف', 'اسم المنتج']);
-        $unitName = $this->getValue($normalizedRow, ['unit', 'unit_name', 'الوحدة', 'اسم الوحدة']);
-        $code = $this->getValue($normalizedRow, ['id', 'code', 'product_code', 'product_number', 'number', 'رقم المنتج', 'رقم المنتجات', 'رقم الصنف', 'كود', 'الكود']);
-        $description = $this->getValue($normalizedRow, ['description', 'desc', 'الوصف']);
+    $productName = $this->getValue($normalizedRow, [
+        'name',
+        'product_name',
+        'product',
+        'اسم الصنف',
+        'اسم المنتج'
+    ]);
 
-        if ($productName === null || $unitName === null || $code === null) {
-            return null;
-        }
+    $unitName = $this->getValue($normalizedRow, [
+        'unit',
+        'unit_name',
+        'الوحدة',
+        'اسم الوحدة'
+    ]);
 
-        // منع تكرار الوحدات (مع تجاهل حالة الأحرف والمسافات الزائدة).
-        $normalizedUnitName = $this->normalizeText($unitName);
-        $unit = units::query()
-            ->whereRaw('LOWER(TRIM(name)) = ?', [strtolower($normalizedUnitName)])
-            ->first();
-        if (!$unit) {
-            $unit = units::create(['name' => $normalizedUnitName]);
-        }
+    $code = $this->getValue($normalizedRow, [
+        'id',
+        'code',
+        'product_code',
+        'product_number',
+        'number',
+        'رقم المنتج',
+        'رقم المنتجات',
+        'رقم الصنف',
+        'كود',
+        'الكود'
+    ]);
 
-        $product = product::query()->where('code', $code)->first();
-        if (!$product) {
-            $product = product::firstOrNew(['name' => $productName]);
-        }
+    $description = $this->getValue($normalizedRow, [
+        'description',
+        'desc',
+        'الوصف'
+    ]);
 
-        $product->name = $productName;
-        $product->unit_uuid = $unit->uuid;
-        $product->description = $description;
-        $product->code = $code;
-
-        if (! $product->exists && auth()->check()) {
-            $product->user_id = auth()->id();
-        }
-
-        $product->save();
-
-        return $product;
+    if ($productName === null || $unitName === null || $code === null) {
+        return null;
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | الوحدة
+    |--------------------------------------------------------------------------
+    */
+
+    $normalizedUnitName = $this->normalizeText($unitName);
+
+    $unit = units::withTrashed()
+        ->whereRaw('LOWER(TRIM(name)) = ?', [
+            strtolower($normalizedUnitName)
+        ])
+        ->first();
+
+    if ($unit) {
+
+        // إذا كانت محذوفة soft delete
+        if ($unit->trashed()) {
+            $unit->restore();
+        }
+
+    } else {
+
+        $unit = units::create([
+            'name' => $normalizedUnitName,
+            'user_id' => auth()->id(),
+        ]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | المنتج
+    |--------------------------------------------------------------------------
+    */
+
+    // البحث بالكود أولاً حتى لو soft delete
+    $product = product::withTrashed()
+        ->where('code', $code)
+        ->first();
+
+    // إذا لم يوجد بالكود ابحث بالاسم
+    if (!$product) {
+
+        $product = product::withTrashed()
+            ->whereRaw('LOWER(TRIM(name)) = ?', [
+                strtolower(trim($productName))
+            ])
+            ->first();
+    }
+
+    // إذا موجود ومحذوف
+    if ($product && $product->trashed()) {
+        $product->restore();
+    }
+
+    // إذا غير موجود نهائياً
+    if (!$product) {
+
+        $product = new product();
+
+        $product->uuid = (string) \Illuminate\Support\Str::uuid();
+        $product->user_id = auth()->id();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | تحديث البيانات
+    |--------------------------------------------------------------------------
+    */
+
+    $product->name = trim($productName);
+    $product->unit_uuid = $unit->uuid;
+    $product->description = $description;
+    $product->code = trim($code);
+
+    $product->save();
+
+    return $product;
+}
+
+    /*
+    |--------------------------------------------------------------------------
+    | Helpers
+    |--------------------------------------------------------------------------
+    */
 
     private function getValue(array $row, array $keys): ?string
     {
         foreach ($keys as $key) {
+
             $normalizedKey = $this->normalizeKey($key);
-            if (!array_key_exists($normalizedKey, $row)) {
+
+            if (! array_key_exists($normalizedKey, $row)) {
                 continue;
             }
 
-            $value = is_string($row[$normalizedKey]) ? trim($row[$normalizedKey]) : $row[$normalizedKey];
+            $value = is_string($row[$normalizedKey])
+                ? trim($row[$normalizedKey])
+                : $row[$normalizedKey];
+
             if ($value !== null && $value !== '') {
                 return (string) $value;
             }
@@ -84,8 +177,12 @@ class ProductsImport implements ToModel, WithHeadingRow
     private function normalizeRowKeys(array $row): array
     {
         $normalized = [];
+
         foreach ($row as $key => $value) {
-            $normalized[$this->normalizeKey((string) $key)] = $value;
+
+            $normalized[
+                $this->normalizeKey((string) $key)
+            ] = $value;
         }
 
         return $normalized;
@@ -93,10 +190,13 @@ class ProductsImport implements ToModel, WithHeadingRow
 
     private function normalizeKey(string $key): string
     {
-        // إزالة BOM من أول عمود في ملفات Excel/CSV إن وجدت.
+        // إزالة BOM من ملفات Excel/CSV
         $key = str_replace("\xEF\xBB\xBF", '', $key);
+
         $key = trim(strtolower($key));
+
         $key = str_replace(['-', '_'], ' ', $key);
+
         $key = preg_replace('/\s+/u', ' ', $key);
 
         return $key ?? '';

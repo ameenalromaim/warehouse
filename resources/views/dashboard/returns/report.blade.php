@@ -274,7 +274,7 @@ value="{{ request('product') }}" placeholder="اسم الصنف" autocomplete="o
 لا توجد أصناف مسجلة لهذه الحركة.
 </td>
 <td class="pe-4 small text-secondary">
-{{ $return->note ?: '—' }}
+{{ $item->note ?: '—' }}
 </td>
 </tr>
 @else
@@ -321,7 +321,7 @@ value="{{ request('product') }}" placeholder="اسم الصنف" autocomplete="o
 </td>
 
 <td class="pe-4 small text-secondary">
-{{ $return->note ?: '—' }}
+{{ $item->note ?: '—' }}
 </td>
 
 </tr>
